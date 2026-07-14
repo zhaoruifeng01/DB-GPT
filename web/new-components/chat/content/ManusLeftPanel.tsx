@@ -1138,7 +1138,19 @@ const ManusLeftPanel: React.FC<ManusLeftPanelProps> = ({
 
         {taskPlan && taskPlan.length > 0 && (
           <div className='mt-3 px-1'>
-            <TaskPlanCard tasks={taskPlan} defaultCollapsed={false} />
+            <TaskPlanCard
+              tasks={taskPlan}
+              defaultCollapsed={false}
+              onTaskClick={(taskIndex) => {
+                // Map task plan index to execution step ID
+                const allSteps = sections.flatMap(s => s.steps);
+                if (taskIndex < allSteps.length) {
+                  const targetStep = allSteps[taskIndex];
+                  const sectionId = sections.find(s => s.steps.some(st => st.id === targetStep.id))?.id || '';
+                  handleStepClick(targetStep.id, sectionId);
+                }
+              }}
+            />
           </div>
         )}
 

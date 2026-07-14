@@ -4,9 +4,9 @@
 set -e
 
 SCRIPT_LOCATION=$0
-cd "$(dirname "$SCRIPT_LOCATION")"
+#cd "$(dirname "$SCRIPT_LOCATION")"
 WORK_DIR=$(pwd)
-WORK_DIR="$WORK_DIR/.."
+WORK_DIR="$WORK_DIR"
 TARGET_DIR="$WORK_DIR/packages/dbgpt-app/src/dbgpt_app/static/web"
 
 echo "Building web static files"
@@ -25,9 +25,15 @@ else
 fi
 
 
-yarn install
 rm -rf ../web/out/
-yarn compile
+if command -v yarn >/dev/null 2>&1; then
+  yarn install
+  yarn compile
+else
+  echo "Yarn not found, using npm"
+  npm install --no-package-lock
+  npm run compile
+fi
 
 rm -rf $TARGET_DIR \
   && mkdir -p $TARGET_DIR \

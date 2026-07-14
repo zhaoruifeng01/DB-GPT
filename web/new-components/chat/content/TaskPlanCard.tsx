@@ -19,6 +19,7 @@ interface TaskPlanCardProps {
   tasks: TaskItem[];
   defaultCollapsed?: boolean;
   embedded?: boolean;
+  onTaskClick?: (taskIndex: number) => void;
 }
 
 const statusIcon = (status: string) => {
@@ -34,7 +35,7 @@ const statusIcon = (status: string) => {
   }
 };
 
-const TaskPlanCard: React.FC<TaskPlanCardProps> = ({ tasks, defaultCollapsed = true, embedded = false }) => {
+const TaskPlanCard: React.FC<TaskPlanCardProps> = ({ tasks, defaultCollapsed = true, embedded = false, onTaskClick }) => {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
@@ -99,23 +100,33 @@ const TaskPlanCard: React.FC<TaskPlanCardProps> = ({ tasks, defaultCollapsed = t
         <ul className='max-h-[220px] space-y-1 overflow-y-auto overscroll-contain px-3.5 py-2.5'>
           {tasks
             .filter(t => t.status !== 'cancelled')
-            .map((task, i) => (
-              <li
-                key={i}
-                className={`flex items-start gap-2.5 rounded-md px-1.5 py-1 leading-5 ${
-                  task.status === 'completed'
-                    ? 'text-slate-400 dark:text-slate-500'
-                    : task.status === 'in_progress'
-                      ? 'bg-sky-50/70 font-semibold text-slate-900 dark:bg-sky-500/10 dark:text-slate-100'
-                      : 'text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                <span className='mt-1 flex-shrink-0'>{statusIcon(task.status)}</span>
-                <span className={task.status === 'completed' ? 'line-through' : ''}>
-                  {i + 1}. {task.content}
-                </span>
-              </li>
-            ))}
+            .map((task, i) => {
+              const originalIndex = tasks.findIndex((t, idx) => {
+                // Find the i-th non-cancelled task's original index
+                const nonCancelled = tasks.slice(0, idx + 1).filter(x => x.status !== 'cancelled');
+                return nonCancelled.length === i + 1 && t === task;
+              });
+              return (
+                <li
+                  key={i}
+                  onClick={() => onTaskClick?.(originalIndex >= 0 ? originalIndex : i)}
+                  className={`flex items-start gap-2.5 rounded-md px-1.5 py-1 leading-5 ${
+                    onTaskClick ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors' : ''
+                  } ${
+                    task.status === 'completed'
+                      ? 'text-slate-400 dark:text-slate-500'
+                      : task.status === 'in_progress'
+                        ? 'bg-sky-50/70 font-semibold text-slate-900 dark:bg-sky-500/10 dark:text-slate-100'
+                        : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <span className='mt-1 flex-shrink-0'>{statusIcon(task.status)}</span>
+                  <span className={task.status === 'completed' ? 'line-through' : ''}>
+                    {i + 1}. {task.content}
+                  </span>
+                </li>
+              );
+            })}
         </ul>
       )}
     </div>
