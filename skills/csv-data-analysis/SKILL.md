@@ -1,23 +1,23 @@
 ---
 name: csv-data-analysis
-description: This skill should be used when users need to analyze CSV or Excel files, understand data patterns, generate statistical summaries, or create data visualizations. Trigger keywords include "analyze CSV", "analyze Excel", "data analysis", "CSV analysis", "Excel analysis", "data statistics", "generate charts", "data visualization", "分析CSV", "分析Excel", "数据分析", "CSV分析", "Excel分析", "数据统计", "生成图表", "数据可视化".
+description: 当用户需要分析 CSV 或 Excel 文件、理解数据模式、生成统计摘要或创建数据可视化时，应使用此技能。触发关键词包括"analyze CSV"、"analyze Excel"、"data analysis"、"CSV analysis"、"Excel analysis"、"data statistics"、"generate charts"、"data visualization"、"分析CSV"、"分析Excel"、"数据分析"、"CSV分析"、"Excel分析"、"数据统计"、"生成图表"、"数据可视化"。
 ---
 
-# Intelligent Deep Data Analysis Tool
+# 智能深度数据分析工具
 
-The Data Analysis Tool is an AI-powered deep automated data exploration tool built on frontend visualization technologies (ECharts + Tailwind CSS). It rapidly extracts statistical features, data quality metrics, numerical distributions, outlier detection, categorical information, correlations, rankings, and time series trends. The latter half of the report supplements these with anomaly overviews, attribution clues, and summary recommendations, producing highly polished and interactive web-based analysis reports. Supported formats include CSV, Excel (.xlsx/.xls), and TSV.
+数据分析工具是一个基于前端可视化技术（ECharts + Tailwind CSS）构建的 AI 驱动深度自动化数据探索工具。它能快速提取统计特征、数据质量指标、数值分布、异常检测、分类信息、相关性、排名和时间序列趋势。报告后半部分补充异常概览、归因线索和总结建议，生成高度精美且可交互的网页分析报告。支持格式包括 CSV、Excel（.xlsx/.xls）和 TSV。
 
-The report follows a structure of "foundational data analysis in the first half, anomaly detection and attribution enhancement in the second half." Core sections include: Executive Summary, Data Overview & Quality Check, Numerical Distribution Features, Feature Analysis & Structural Analysis, Relationship Analysis & Anomaly Identification, Data Anomaly Overview, Attribution Analysis Module, Analysis Results & Statistical Details, Root Cause Inference / Conclusions / Recommendations.
+报告遵循"前半部分基础数据分析，后半部分异常检测与归因增强"的结构。核心章节包括：执行摘要、数据概览与质量检查、数值分布特征、特征分析与结构分析、关系分析与异常识别、数据异常概览、归因分析模块、分析结果与统计详情、根因推断/结论/建议。
 
-## Core Workflow (Required Reading for LLMs)
+## 核心工作流（LLM 必读）
 
-As an AI assistant, when a user uploads a CSV or Excel file and requests analysis, you must strictly follow these two steps:
+作为 AI 助手，当用户上传 CSV 或 Excel 文件并请求分析时，你必须严格按照以下两个步骤执行：
 
-### Step 1: Extract Data Features (Execute Script)
+### 步骤 1：提取数据特征（执行脚本）
 
-Use the `execute_skill_script_file` tool to run `csv_analyzer.py`, passing in the data file path (supports .csv, .xlsx, .xls, .tsv formats).
+使用 `execute_skill_script_file` 工具运行 `csv_analyzer.py`，传入数据文件路径（支持 .csv、.xlsx、.xls、.tsv 格式）。
 
-**Tool call parameter example:**
+**工具调用参数示例：**
 ```json
 {
   "skill_name": "csv-data-analysis",
@@ -26,87 +26,88 @@ Use the `execute_skill_script_file` tool to run `csv_analyzer.py`, passing in th
 }
 ```
 
-**Script return explanation:**
-The script returns a large block of `text` content containing two parts:
-1. **[Statistical Summary]**: For you to read and understand the dataset's basic characteristics, distributions, correlations, and categorical composition.
-2. **[Marker-wrapped data blocks]**: The script output contains marker data blocks in the format `###KEY_START###...###KEY_END###`. The backend automatically captures and injects these into the template — **you do not need to handle or pass this content**.
+**脚本返回说明：**
+脚本返回一大段 `text` 内容，包含两部分：
+1. **[统计摘要]**：供你阅读和理解数据集的基本特征、分布、相关性和分类组成。
+2. **[标记包裹的数据块]**：脚本输出包含格式为 `###KEY_START###...###KEY_END###` 的标记数据块。后端会自动捕获并注入到模板中——**你无需处理或传递此内容**。
 
-### Step 2: Generate Insights & Display Report (Inject into Template)
+### 步骤 2：生成洞察 & 展示报告（注入模板）
 
-Read the "Statistical Summary" obtained in Step 1, and reason about the business significance or patterns behind the data. Then use the `html_interpreter` tool to load the template and inject data.
+阅读步骤 1 中获得的"统计摘要"，推理数据背后的业务意义或模式。然后使用 `html_interpreter` 工具加载模板并注入数据。
 
-**Critical Rules (Must Follow):**
+**关键规则（必须遵守）：**
 
-1. **You must set `template_path`** to `csv-data-analysis/templates/report_template.html`. The template has built-in complete ECharts rendering JavaScript code and all section titles and footer text. You only need to fill in 9 content placeholders via the `data` parameter. **Never write or modify any JavaScript chart rendering code yourself.**
+1. **你必须设置 `template_path`** 为 `csv-data-analysis/templates/report_template.html`。模板内置了完整的 ECharts 渲染 JavaScript 代码以及所有章节标题和页脚文本。你只需通过 `data` 参数填充 9 个内容占位符。**绝不要自己编写或修改任何 JavaScript 图表渲染代码。**
 
-2. **Marker data blocks are automatically injected by the backend** — you must not pass them in `data`. The backend automatically extracts content from `###KEY_START###...###KEY_END###` markers in the script output and injects it into the template; in this skill, this is primarily `CHART_DATA_JSON`.
+2. **标记数据块由后端自动注入** —— 你不得在 `data` 中传递它们。后端会自动从脚本输出中的 `###KEY_START###...###KEY_END###` 标记提取内容并注入模板；在本技能中，这主要是 `CHART_DATA_JSON`。
 
-3. **`*_INSIGHTS`, `EXEC_SUMMARY`, and `CONCLUSIONS`** must use HTML formatting (e.g., `<p>`, `<ul>`, `<li>`, `<strong>`, `<ol>`) to ensure proper layout. These are deep business insights you write based on the statistical summary.
+3. **`*_INSIGHTS`、`EXEC_SUMMARY` 和 `CONCLUSIONS`** 必须使用 HTML 格式（如 `<p>`、`<ul>`、`<li>`、`<strong>`、`<ol>`）以确保正确排版。这些是你基于统计摘要撰写的深度业务洞察。
 
-4. **The output language must match the user's input language.** You must also pass the `LANG` placeholder (`"en"` or `"zh"`) so that the template's hardcoded section titles, labels, and footer text are displayed in the matching language. Detect language from the user's query: if the user writes in English, set `LANG` to `"en"`; if the user writes in Chinese, set `LANG` to `"zh"`. Default to `"zh"` when uncertain.
+4. **输出语言必须与用户输入语言一致。** 你还必须传递 `LANG` 占位符（`"en"` 或 `"zh"`），以便模板中硬编码的章节标题、标签和页脚文本以匹配的语言显示。从用户查询中检测语言：如果用户使用英文书写，设置 `LANG` 为 `"en"`；如果用户使用中文书写，设置 `LANG` 为 `"zh"`。不确定时默认为 `"zh"`。
 
-5. **Pass exactly 9 placeholders — no more, no less.** Auto-injected marker fields like `CHART_DATA_JSON` are handled by the backend and should not be passed by you. The template already hardcodes all section titles (Distribution Analysis, Correlation Analysis, etc.), insight box titles ("Insights"), and footer text — you do not need to pass these (the template will automatically translate them based on the `LANG` placeholder).
+5. **精确传递 9 个占位符——不多不少。** 自动注入的标记字段如 `CHART_DATA_JSON` 由后端处理，不应由你传递。模板已硬编码所有章节标题（分布分析、相关性分析等）、洞察框标题（"洞察"）和页脚文本——你无需传递这些（模板会根据 `LANG` 占位符自动翻译）。
 
-6. **Insight content must be substantive.** Each insight module should cover 4 layers of information: `observation`, `possible causes`, `business impact`, and `action recommendations`. Do not merely restate statistical values or write only a few vague conclusions.
+6. **洞察内容必须有实质性。** 每个洞察模块应涵盖 4 层信息：`观察`、`可能原因`、`业务影响`和`行动建议`。不要仅仅重述统计数值或只写几句模糊的结论。
 
-7. **Foundational analysis first, attribution as an enhancement module.** The first half of the report must focus on analyzing the data features of the CSV itself, including numerical distributions, categorical structures, outliers, correlations, ranking patterns, etc., and should incorporate chart interpretations wherever possible. "Data Anomaly Overview," "Attribution Analysis," and "Root Cause Inference" should appear in the second half as enhancement modules — the entire report must not consist solely of attribution content.
+7. **基础分析在前，归因作为增强模块。** 报告前半部分必须聚焦于 CSV 本身的数据特征分析，包括数值分布、分类结构、异常值、相关性、排名模式等，并尽可能结合图表解读。"数据异常概览"、"归因分析"和"根因推断"应出现在后半部分作为增强模块——整个报告不能仅由归因内容组成。
 
-**`html_interpreter` call example:**
+**`html_interpreter` 调用示例：**
 ```json
 {
   "template_path": "csv-data-analysis/templates/report_template.html",
   "data": {
-    "LANG": "en",
-    "REPORT_TITLE": "Sales Dataset Deep Analysis Report",
-    "REPORT_SUBTITLE": "Multi-dimensional Data Feature & Business Insight Mining",
-    "EXEC_SUMMARY": "<p>This dataset contains 1,000 rows and 5 columns with good data completeness. Key findings include:</p><ul><li><strong>Audience Distribution:</strong> Primarily concentrated in the 25-35 age group...</li></ul>",
-    "DISTRIBUTION_INSIGHTS": "<p>The numerical distribution chart reveals that Metric A exhibits a pronounced right-skewed distribution, suggesting...</p>",
-    "CORRELATION_INSIGHTS": "<p>The heatmap between variables reveals strong positive correlations, particularly between..., which implies...</p>",
-    "CATEGORICAL_INSIGHTS": "<p>Category proportions show that Beijing and Shanghai account for over 50% of the 'City' field.</p>",
-    "TIME_SERIES_INSIGHTS": "<p>The time series trend indicates a significant seasonal uptick toward year-end.</p>",
-    "CONCLUSIONS": "<p>Based on the comprehensive multi-dimensional analysis, the data exhibits clear structural features and patterns.</p><h3>Recommendations</h3><ul><li>Regularly monitor missing value ratios...</li><li>Focus on high-growth market segments...</li></ul>"
+    "LANG": "zh",
+    "REPORT_TITLE": "销售数据集深度分析报告",
+    "REPORT_SUBTITLE": "多维数据特征与业务洞察挖掘",
+    "EXEC_SUMMARY": "<p>该数据集包含 1,000 行 5 列，数据完整性良好。主要发现包括：</p><ul><li><strong>受众分布：</strong>主要集中在 25-35 岁年龄段...</li></ul>",
+    "DISTRIBUTION_INSIGHTS": "<p>数值分布图表显示指标 A 呈现明显的右偏分布，表明...</p>",
+    "CORRELATION_INSIGHTS": "<p>变量间热力图揭示了强正相关性，特别是在...之间，这意味着...</p>",
+    "CATEGORICAL_INSIGHTS": "<p>分类占比显示北京和上海占"城市"字段的 50% 以上。</p>",
+    "TIME_SERIES_INSIGHTS": "<p>时间序列趋势表明年末有显著的季节性上升。</p>",
+    "CONCLUSIONS": "<p>基于综合多维分析，数据呈现出清晰的结构特征和模式。</p><h3>建议</h3><ul><li>定期监控缺失值比率...</li><li>关注高增长市场细分...</li></ul>"
   }
 }
 ```
 
-> **Strictly Prohibited:**
-> - Do NOT pass `CHART_DATA_JSON` or any auto-injected marker fields in `data` (handled automatically by the backend)
-> - Do NOT add any JavaScript code in `data`
-> - Do NOT omit the `template_path` parameter (omitting template_path will prevent charts from rendering!)
-> - Do NOT return static PNG images — this tool has been fully upgraded to ECharts dynamic frontend rendering
-> - Do NOT pass non-existent placeholders (the template only has the following 9 text placeholders + 1 auto-injected CHART_DATA_JSON; other names will be ignored)
+> **严格禁止：**
+> - 不要在 `data` 中传递 `CHART_DATA_JSON` 或任何自动注入的标记字段（由后端自动处理）
+> - 不要在 `data` 中添加任何 JavaScript 代码
+> - 不要省略 `template_path` 参数（省略 template_path 将导致图表无法渲染！）
+> - 不要返回静态 PNG 图片——此工具已全面升级为 ECharts 动态前端渲染
+> - 不要传递不存在的占位符（模板只有以下 9 个文本占位符 + 1 个自动注入的 CHART_DATA_JSON；其他名称将被忽略）
 
-## Placeholder Reference (9 total, passed by LLM via data)
+## 占位符参考（共 9 个，由 LLM 通过 data 传递）
 
-The placeholders you need to fill in the template are as follows:
+你需要在模板中填充的占位符如下：
 
-| Placeholder | Type | Required | Description |
+| 占位符 | 类型 | 必填 | 说明 |
 |---|---|---|---|
-| `LANG` | Text | Yes | Report language: `"en"` for English, `"zh"` for Chinese. Determines all section titles, labels, and footer text language. Detect from user's input language; default `"zh"` |
-| `REPORT_TITLE` | Text | Yes | Report title, e.g., "Sales Dataset Deep Analysis Report" |
-| `REPORT_SUBTITLE` | Text | Yes | Report subtitle, e.g., "Multi-dimensional Data Feature & Business Insight Mining" |
-| `EXEC_SUMMARY` | HTML | Yes | Executive summary: overview of data scale, key findings, and conclusion preview |
-| `DISTRIBUTION_INSIGHTS` | HTML | Yes | Numerical distribution feature interpretation: skewness, volatility, quantile ranges, dispersion |
-| `CORRELATION_INSIGHTS` | HTML | Yes | Relationship analysis & anomaly identification interpretation: correlations, linkages, outliers, structural relationships |
-| `CATEGORICAL_INSIGHTS` | HTML | Yes | Feature analysis & structural analysis interpretation: categorical structure, concentration, rankings, and group characteristics |
-| `TIME_SERIES_INSIGHTS` | HTML | Yes | Supplementary interpretation for the data anomaly overview section: discuss trends if time columns exist; discuss stratification differences and anomaly patterns if no time columns |
-| `CONCLUSIONS` | HTML | Yes | Root cause inference, conclusions & recommendations body; must distinguish between "data evidence" and "reasonable speculation" |
+| `LANG` | 文本 | 是 | 报告语言：`"en"` 表示英文，`"zh"` 表示中文。决定所有章节标题、标签和页脚文本的语言。从用户输入语言检测；默认 `"zh"` |
+| `REPORT_TITLE` | 文本 | 是 | 报告标题，如"销售数据集深度分析报告" |
+| `REPORT_SUBTITLE` | 文本 | 是 | 报告副标题，如"多维数据特征与业务洞察挖掘" |
+| `EXEC_SUMMARY` | HTML | 是 | 执行摘要：数据规模概述、关键发现和结论预览 |
+| `DISTRIBUTION_INSIGHTS` | HTML | 是 | 数值分布特征解读：偏度、波动性、分位数范围、离散度 |
+| `CORRELATION_INSIGHTS` | HTML | 是 | 关系分析与异常识别解读：相关性、关联性、异常值、结构关系 |
+| `CATEGORICAL_INSIGHTS` | HTML | 是 | 特征分析与结构分析解读：分类结构、集中度、排名和群体特征 |
+| `TIME_SERIES_INSIGHTS` | HTML | 是 | 数据异常概览章节的补充解读：如有时间列则讨论趋势；如无时间列则讨论分层差异和异常模式 |
+| `CONCLUSIONS` | HTML | 是 | 根因推断、结论与建议正文；必须区分"数据证据"和"合理推测" |
 
-> **Note:** `csv_analyzer.py` includes `###CHART_DATA_JSON_START###...###CHART_DATA_JSON_END###` marker data blocks in its output. The backend automatically extracts and injects these into the template — they should not be passed in `data`. All section titles in the template (e.g., "Distribution Analysis", "Correlation Analysis", "Conclusions & Recommendations"), insight box titles ("Insights"), and footer text are hardcoded in the HTML and are automatically translated based on the `LANG` placeholder — they do not need to be passed via placeholders.
+> **注意：** `csv_analyzer.py` 在其输出中包含 `###CHART_DATA_JSON_START###...###CHART_DATA_JSON_END###` 标记数据块。后端会自动提取并注入到模板中——不应在 `data` 中传递。模板中所有章节标题（如"分布分析"、"相关性分析"、"结论与建议"）、洞察框标题（"洞察"）和页脚文本均在 HTML 中硬编码，并根据 `LANG` 占位符自动翻译——无需通过占位符传递。
 
-## Why Choose This Tool?
+## 为什么选择此工具？
 
-1. **Fast & Lightweight**: No more slow Python plotting and bulk PNG generation — only core JSON data is transmitted.
-2. **Modern Interactive Layout**: Fully integrated with Tailwind CSS responsive layouts and Apache ECharts smooth animated interactions.
-3. **Deep Business Insights**: By separating machine-driven data extraction from LLM-driven logical reasoning, this tool produces highly valuable data analysis reports.
+1. **快速轻量**：不再使用缓慢的 Python 绑图和批量 PNG 生成——仅传输核心 JSON 数据。
+2. **现代交互式布局**：完全集成 Tailwind CSS 响应式布局和 Apache ECharts 流畅动画交互。
+3. **深度业务洞察**：通过将机器驱动的数据提取与 LLM 驱动的逻辑推理分离，此工具能产出高价值的数据分析报告。
 
-## File Structure
+## 文件结构
 
 ```
 csv-data-analysis/
-├── SKILL.md                        # The skill guide you are currently reading
+├── SKILL.md                        # 你正在阅读的技能指南（英文版）
+├── SKILL_zh.md                     # 技能指南中文版
 ├── scripts/
-│   └── csv_analyzer.py             # Python analysis engine (supports CSV/Excel/TSV, lightweight, no graphics dependencies)
+│   └── csv_analyzer.py             # Python 分析引擎（支持 CSV/Excel/TSV，轻量级，无图形依赖）
 └── templates/
-    └── report_template.html        # Responsive ECharts report template (with built-in rendering logic and hardcoded titles)
+    └── report_template.html        # 响应式 ECharts 报告模板（内置渲染逻辑和硬编码标题）
 ```

@@ -455,33 +455,8 @@ const convertToManusFormat = (
 };
 
 const EXAMPLE_CARDS = [
-  {
-    id: 'walmart_sales',
-    icon: '📊',
-    title: '沃尔玛销售数据分析',
-    description: '分析沃尔玛销售CSV数据，生成可视化网页报告',
-    query:
-      '请全面分析这份沃尔玛销售数据，包括各门店销售趋势、假日影响、温度与油价对销售的影响等维度，生成一份精美的交互式网页分析报告。',
-    fileName: 'Walmart_Sales.csv',
-    fileType: 'text/csv',
-    fileSize: 98304, // ~96 KB
-    color: 'from-blue-500/10 to-cyan-500/10',
-    borderColor: 'border-blue-200/60 dark:border-blue-800/40',
-    iconBg: 'bg-blue-100 dark:bg-blue-900/40',
-    skillName: 'csv-data-analysis',
-  },
-  {
-    id: 'db_profile_report',
-    icon: '🗄️',
-    title: '数据库画像与分析报告',
-    description: '连接数据库后，生成数据库画像并生成可视化网页报告',
-    query:
-      '请分析当前连接的数据库，生成数据库画像（包括表结构、字段信息、数据量统计等），并生成一份精美的交互式网页分析报告。',
-    dbName: 'Walmart_Sales',
-    color: 'from-emerald-500/10 to-teal-500/10',
-    borderColor: 'border-emerald-200/60 dark:border-emerald-800/40',
-    iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
-  },
+  // 已屏蔽：沃尔玛销售数据分析（walmart_sales）
+  // 已屏蔽：数据库画像与分析报告（db_profile_report）
   {
     id: 'fin_report',
     icon: '📈',
