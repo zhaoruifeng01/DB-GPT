@@ -136,7 +136,7 @@ fi
 
 # ── 4. 启动后端 ──
 print "🚀 Starting DB-GPT webserver on port ${BACKEND_PORT}..."
-exec .venv/bin/dbgpt start webserver --profile openai
+exec .venv/bin/dbgpt start webserver --config configs/dbgpt-proxy-openai.toml
 #!/usr/bin/env zsh
 # ============================================================
 # dbgpt-start: 生产模式启动（增量前端构建）
@@ -208,4 +208,4 @@ fi
 
 # ── 4. 启动后端 ──
 print "🚀 Starting DB-GPT webserver on port ${BACKEND_PORT}..."
-exec .venv/bin/dbgpt start webserver --profile openai
+exec .venv/bin/dbgpt start webserver --config configs/dbgpt-proxy-openai.toml

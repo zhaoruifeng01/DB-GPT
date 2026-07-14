@@ -3,6 +3,7 @@
 language = "${env:DBGPT_LANG:-en}"
 api_keys = []
 encrypt_key = "your_secret_key"
+log_level = "WARNING"
 
 # Server Configurations
 [service.web]
@@ -10,8 +11,12 @@ host = "0.0.0.0"
 port = 5670
 
 [service.web.database]
-type = "sqlite"
-path = "pilot/meta_data/dbgpt.db"
+type = "mysql"
+host = "backup-polardb-history.rwlb.rds.aliyuncs.com"
+port = 3306
+database = "ekb400"
+user = "sql_review"
+password = "M3TTsyAhXy8Xn3PZf2vH"
 
 [rag.storage]
 [rag.storage.vector]
@@ -21,13 +26,13 @@ persist_path = "pilot/data"
 # Model Configurations
 [models]
 [[models.llms]]
-name = "${env:LLM_MODEL_NAME:-gpt-4o}"
-provider = "${env:LLM_MODEL_PROVIDER:-proxy/openai}"
-api_base = "${env:OPENAI_API_BASE:-https://api.openai.com/v1}"
+name = "glm-5.2"
+provider = "proxy/openai"
+api_base = "https://ai-gateway-prod.hosecloud.com/coding-plan/v1"
 api_key = "${env:OPENAI_API_KEY}"
 
 [[models.embeddings]]
-name = "${env:EMBEDDING_MODEL_NAME:-text-embedding-3-small}"
-provider = "${env:EMBEDDING_MODEL_PROVIDER:-proxy/openai}"
-api_url = "${env:EMBEDDING_MODEL_API_URL:-https://api.openai.com/v1/embeddings}"
+name = "Qwen3-Embedding-8B"
+provider = "proxy/openai"
+api_url = "https://ai-gateway-prod.hosecloud.com/coding-plan-emb/v1/embeddings"
 api_key = "${env:OPENAI_API_KEY}"
