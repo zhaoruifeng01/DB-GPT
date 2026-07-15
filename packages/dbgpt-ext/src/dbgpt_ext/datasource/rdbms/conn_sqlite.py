@@ -15,6 +15,7 @@ from dbgpt.core.awel.flow import (
 )
 from dbgpt.datasource.parameter import BaseDatasourceParameters
 from dbgpt.datasource.rdbms.base import RDBMSConnector
+from dbgpt.util.db_performance import attach_slow_query_logger
 from dbgpt.util.i18n_utils import _
 
 logger = logging.getLogger(__name__)
@@ -88,7 +89,9 @@ class SQLiteConnector(RDBMSConnector):
         _engine_args = {
             "connect_args": {"check_same_thread": parameters.check_same_thread}
         }
-        return cls(create_engine(f"sqlite:///{parameters.path}", **_engine_args))
+        engine = create_engine(f"sqlite:///{parameters.path}", **_engine_args)
+        attach_slow_query_logger(engine)
+        return cls(engine)
 
     @classmethod
     def from_file_path(
@@ -101,7 +104,9 @@ class SQLiteConnector(RDBMSConnector):
         directory = os.path.dirname(file_path)
         if not os.path.exists(directory):
             os.makedirs(directory)
-        return cls(create_engine("sqlite:///" + file_path, **_engine_args), **kwargs)
+        engine = create_engine("sqlite:///" + file_path, **_engine_args)
+        attach_slow_query_logger(engine)
+        return cls(engine, **kwargs)
 
     def get_indexes(self, table_name):
         """Get table indexes about specified table."""
@@ -281,6 +286,7 @@ class SQLiteTempConnector(SQLiteConnector):
         temp_file.close()
 
         engine = create_engine(f"sqlite:///{temp_file_path}", **_engine_args)
+        attach_slow_query_logger(engine)
         return cls(engine, temp_file_path, **kwargs)
 
     def close(self):

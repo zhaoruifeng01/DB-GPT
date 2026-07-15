@@ -4,6 +4,8 @@ language = "${env:DBGPT_LANG:-en}"
 api_keys = []
 encrypt_key = "your_secret_key"
 log_level = "WARNING"
+# Auth type: "mock" (default, no auth) or "db" (database-based permission)
+auth_type = "db"
 
 # Server Configurations
 [service.web]
@@ -17,6 +19,11 @@ port = 3306
 database = "ekb400"
 user = "sql_review"
 password = "M3TTsyAhXy8Xn3PZf2vH"
+pool_size = 20
+max_overflow = 40
+pool_timeout = 30
+pool_recycle = 3600
+pool_pre_ping = true
 
 [rag.storage]
 [rag.storage.vector]

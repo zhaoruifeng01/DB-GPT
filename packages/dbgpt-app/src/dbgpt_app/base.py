@@ -60,7 +60,14 @@ def _initialize_db_storage(param: ServiceConfig, system_app: SystemApp):
     Now just support sqlite and mysql. If db type is sqlite, the db path is
     `pilot/meta_data/{db_name}.db`.
     """
+    from dbgpt.util.db_performance import configure_slow_query_logging
     from dbgpt_ext.datasource.rdbms.conn_sqlite import SQLiteConnectorParameters
+
+    configure_slow_query_logging(
+        enabled=param.web.slow_query_log_enabled,
+        threshold_ms=param.web.slow_query_threshold_ms,
+        max_sql_length=param.web.slow_query_max_sql_length,
+    )
 
     db_config: BaseDatasourceParameters = param.web.database
     if isinstance(db_config, SQLiteConnectorParameters):

@@ -14,6 +14,7 @@ from dbgpt.core.awel.flow import (
 )
 from dbgpt.datasource.parameter import BaseDatasourceParameters
 from dbgpt.datasource.rdbms.base import RDBMSConnector
+from dbgpt.util.db_performance import attach_slow_query_logger
 from dbgpt.util.i18n_utils import _
 
 
@@ -133,7 +134,9 @@ class HiveConnector(RDBMSConnector):
         """
         db_url = parameters.db_url()
         engine_args = parameters.engine_args() or {}
-        return cls(create_engine(db_url, **engine_args))
+        engine = create_engine(db_url, **engine_args)
+        attach_slow_query_logger(engine)
+        return cls(engine)
 
     @classmethod
     def from_uri_db(

@@ -1,4 +1,5 @@
 import { ModelSvg } from '@/components/icons';
+import { STORAGE_USERINFO_KEY } from '@/utils/constants/index';
 import Icon, {
   ApiOutlined,
   AppstoreOutlined,
@@ -8,15 +9,17 @@ import Icon, {
   ForkOutlined,
   MessageOutlined,
   PartitionOutlined,
+  TeamOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import { ConfigProvider, Tabs } from 'antd';
 import { t } from 'i18next';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './style.css';
 
 function ConstructLayout({ children, className }: { children: React.ReactNode; className?: string }) {
+  const [userRole, setUserRole] = useState<string>('normal');
   const items = [
     {
       key: 'app',
@@ -93,10 +96,29 @@ function ConstructLayout({ children, className }: { children: React.ReactNode; c
       path: '/dbgpts',
       icon: <BuildOutlined />,
     },
+    ...(userRole === 'admin'
+      ? [
+          {
+            key: 'permission',
+            name: t('permission_management'),
+            path: '/permission',
+            icon: <TeamOutlined />,
+          },
+        ]
+      : []),
   ];
   const router = useRouter();
   const activeKey = router.pathname.split('/')[2];
   // const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches; // unused
+
+  useEffect(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem(STORAGE_USERINFO_KEY) ?? '{}');
+      setUserRole(user?.role || 'normal');
+    } catch {
+      setUserRole('normal');
+    }
+  }, []);
 
   return (
     <div className='flex flex-col h-full w-full  dark:bg-gradient-dark bg-gradient-light bg-cover bg-center'>

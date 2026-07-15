@@ -30,6 +30,7 @@ def scan_serve_configs():
         "dbgpt_serve.prompt",
         "dbgpt_serve.rag",
         "dbgpt_serve.connector",  # External connectors serve
+        "dbgpt_serve.permission",
     ]
 
     scanner = ModelScanner[BaseServeConfig]()
@@ -84,14 +85,20 @@ def register_serve_apps(
     """Register serve apps"""
     serve_configs = {s.get_type_value(): s for s in app_config.serves}
 
-    system_app.config.set("dbgpt.app.global.language", app_config.system.language)
+    system_app.config.set(
+        "dbgpt.app.global.language", app_config.system.language, overwrite=True
+    )
     global_api_keys: Optional[str] = None
     if app_config.system.api_keys:
         global_api_keys = ",".join(app_config.system.api_keys)
-        system_app.config.set("dbgpt.app.global.api_keys", global_api_keys)
+        system_app.config.set(
+            "dbgpt.app.global.api_keys", global_api_keys, overwrite=True
+        )
     if app_config.system.encrypt_key:
         system_app.config.set(
-            "dbgpt.app.global.encrypt_key", app_config.system.encrypt_key
+            "dbgpt.app.global.encrypt_key",
+            app_config.system.encrypt_key,
+            overwrite=True,
         )
 
     # ################################ Prompt Serve Register Begin ####################
@@ -99,19 +106,20 @@ def register_serve_apps(
         Serve as PromptServe,
     )
 
-    # Register serve app
-    system_app.register(
-        PromptServe,
-        api_prefix="/prompt",
-        config=get_config(
-            serve_configs,
-            PromptServe.name,
-            dbgpt_serve.prompt.serve.ServeConfig,
-            default_user="dbgpt",
-            default_sys_code="dbgpt",
-            api_keys=global_api_keys,
-        ),
-    )
+    # Skip if already registered (e.g. early-init for agent startup availability)
+    if PromptServe.name not in system_app.components:
+        system_app.register(
+            PromptServe,
+            api_prefix="/prompt",
+            config=get_config(
+                serve_configs,
+                PromptServe.name,
+                dbgpt_serve.prompt.serve.ServeConfig,
+                default_user="dbgpt",
+                default_sys_code="dbgpt",
+                api_keys=global_api_keys,
+            ),
+        )
     # ################################ Prompt Serve Register End ######################
 
     # ################################ Conversation Serve Register Begin ##############
@@ -341,3 +349,20 @@ def register_serve_apps(
         ),
     )
     # ######################### Scheduled Task Serve Register End ####################
+
+    # ######################### Permission Serve Register Begin ####################
+    from dbgpt_serve.permission.config import ServeConfig as PermissionServeConfig
+    from dbgpt_serve.permission.serve import Serve as PermissionServe
+
+    # Skip if already registered (e.g. early-init for login availability)
+    if PermissionServe.name not in system_app.components:
+        system_app.register(
+            PermissionServe,
+            config=get_config(
+                serve_configs,
+                PermissionServe.name,
+                PermissionServeConfig,
+                api_keys=global_api_keys,
+            ),
+        )
+    # ######################### Permission Serve Register End ######################

@@ -12,6 +12,7 @@ from dbgpt.core.awel.flow import (
 )
 from dbgpt.datasource.parameter import BaseDatasourceParameters
 from dbgpt.datasource.rdbms.base import RDBMSConnector
+from dbgpt.util.db_performance import attach_slow_query_logger
 from dbgpt.util.i18n_utils import _
 
 
@@ -67,7 +68,9 @@ class DuckDbConnector(RDBMSConnector):
     ) -> RDBMSConnector:
         """Construct a SQLAlchemy engine from URI."""
         _engine_args = engine_args or {}
-        return cls(create_engine("duckdb:///" + file_path, **_engine_args), **kwargs)
+        engine = create_engine("duckdb:///" + file_path, **_engine_args)
+        attach_slow_query_logger(engine)
+        return cls(engine, **kwargs)
 
     def get_users(self):
         """Get users."""

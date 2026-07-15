@@ -291,6 +291,22 @@ class ServiceWebParameters(BaseParameters):
             )
         },
     )
+    slow_query_log_enabled: bool = field(
+        default=False,
+        metadata={
+            "help": _(
+                "Whether to log database queries over the configured threshold"
+            )
+        },
+    )
+    slow_query_threshold_ms: int = field(
+        default=500,
+        metadata={"help": _("Slow database query threshold in milliseconds")},
+    )
+    slow_query_max_sql_length: int = field(
+        default=1000,
+        metadata={"help": _("Maximum logged SQL template length")},
+    )
     model_storage: Optional[str] = field(
         default=None,
         metadata={

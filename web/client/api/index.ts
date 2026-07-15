@@ -1,5 +1,5 @@
 import { getUserId } from '@/utils';
-import { HEADER_USER_ID_KEY } from '@/utils/constants/index';
+import { HEADER_USER_ID_KEY, STORAGE_TOKEN_KEY, STORAGE_USERINFO_KEY } from '@/utils/constants/index';
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export type ResponseType<T = any> = {
@@ -44,8 +44,26 @@ ins.interceptors.request.use(request => {
     request.timeout = isLongTimeApi ? 60000 : 100000;
   }
   request.headers.set(HEADER_USER_ID_KEY, getUserId());
+  const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+  if (token) {
+    request.headers.set('Authorization', `Bearer ${token}`);
+  }
   return request;
 });
+
+ins.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem(STORAGE_TOKEN_KEY);
+      localStorage.removeItem(STORAGE_USERINFO_KEY);
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const GET = <Params = any, Response = any, D = any>(
   url: string,
@@ -86,5 +104,6 @@ export * from './flow';
 export * from './knowledge';
 export * from './prompt';
 export * from './request';
+export * from './permission';
 export * from './tools';
 export * from './user';

@@ -38,7 +38,7 @@ export default function AppCard(props: IProps) {
     confirm({
       title: t('Tips'),
       icon: <WarningOutlined />,
-      content: `do you want delete the application?`,
+      content: `你想删除这个应用吗?`,
       okText: 'Yes',
       okType: 'danger',
       cancelText: 'No',

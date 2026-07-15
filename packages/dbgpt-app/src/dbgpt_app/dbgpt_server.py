@@ -1,10 +1,13 @@
 import logging
 import os
 import sys
-from typing import List
+import threading
+import time
+from typing import List, Optional  # noqa: F401 - kept for potential external imports
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # fastapi import time cost about 0.05s
 from fastapi.staticfiles import StaticFiles
@@ -39,6 +42,12 @@ from dbgpt_serve.core import add_exception_handler
 logger = logging.getLogger(__name__)
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(ROOT_PATH)
+
+# ---------------------------------------------------------------------------
+# Readiness state: set after Phase 2 (deferred init) completes.
+# APIs that depend on full initialization check this before processing.
+# ---------------------------------------------------------------------------
+_app_ready = threading.Event()
 
 app = create_app(
     title=_("DB-GPT Open API"),
@@ -134,44 +143,258 @@ def mount_static_files(app: FastAPI, param: ApplicationConfig):
 add_exception_handler(app)
 
 
-def initialize_app(param: ApplicationConfig, args: List[str] = None):
-    """Initialize app
-    If you use gunicorn as a process manager, initialize_app can be invoke in
-    `on_starting` hook.
-    Args:
-        param:WebServerParameters
-        args:List[str]
+# ---------------------------------------------------------------------------
+# Readiness middleware: returns 503 for non-critical APIs until Phase 2 done
+# ---------------------------------------------------------------------------
+_ALWAYS_ALLOW_PREFIXES = (
+    "/api/health",
+    "/api/v1/serve/permission/auth",
+    "/docs",
+    "/openapi.json",
+    "/redoc",
+)
+
+
+@app.middleware("http")
+async def readiness_middleware(request: Request, call_next):
+    """Return 503 for business APIs while deferred initialization is running."""
+    if _app_ready.is_set():
+        return await call_next(request)
+    path = request.url.path
+    # Always allow health, login, static, docs
+    if (
+        path.startswith(_ALWAYS_ALLOW_PREFIXES)
+        or path.startswith("/_next/")
+        or path.startswith("/images")
+        or not path.startswith("/api")
+    ):
+        return await call_next(request)
+    return JSONResponse(
+        status_code=503,
+        content={
+            "success": False,
+            "err_code": "SERVICE_INITIALIZING",
+            "err_msg": "Service is starting up, please wait...",
+            "data": None,
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# Health check endpoint (always available after Phase 1)
+# ---------------------------------------------------------------------------
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint. Returns readiness status."""
+    if _app_ready.is_set():
+        return {"status": "ready"}
+    return {"status": "initializing"}
+
+
+# ---------------------------------------------------------------------------
+# Phase 1: Critical initialization (blocking, before uvicorn starts)
+# ---------------------------------------------------------------------------
+def _init_critical(param: ApplicationConfig):
+    """Phase 1: Minimal blocking initialization.
+
+    Only performs work that MUST complete before the server can accept any
+    request: logging, DB connection, route registration, schema migration,
+    prompt/permission serves required by startup/login, and static file mounting.
     """
-
-    # import after param is initialized, accelerate --help speed
-    from dbgpt.model.cluster import initialize_worker_manager_in_client
-
     web_config = param.service.web
     log_config = web_config.log or param.log
     setup_logging(
         "dbgpt",
         log_config,
+        default_logger_level=param.system.log_level,
         default_logger_filename=os.path.join(LOGDIR, "dbgpt_webserver.log"),
     )
 
+    # DB connection (all components depend on this)
     server_init(param, system_app)
-    mount_routers(app)
-    model_start_listener = _create_model_start_listener(system_app)
-    initialize_components(
-        param,
-        system_app,
-    )
-    system_app.on_init()
 
-    # Migration db storage, so you db models must be imported before this
+    # API routes (uvicorn needs them)
+    mount_routers(app)
+
+    # DB schema migration
     _migration_db_storage(
         param.service.web.database, web_config.disable_alembic_upgrade
     )
 
-    # After init, when the database is ready
-    system_app.after_init()
+    # Prompt serve must be ready before AgentManager.after_start() registers agents.
+    _init_prompt_serve(param)
 
-    # Register default data sources
+    # Permission serve must be ready for login
+    _init_permission_serve(param)
+
+    # Static files for frontend
+    mount_static_files(app, param)
+
+    logger.info("Phase 1 (critical init) complete - server ready to accept requests")
+
+
+def _init_prompt_serve(param: ApplicationConfig):
+    """Register and start the prompt serve before agent startup hooks run."""
+    from dbgpt_app.initialization.serve_initialization import get_config
+    from dbgpt_serve.prompt.config import ServeConfig as PromptServeConfig
+    from dbgpt_serve.prompt.serve import Serve as PromptServe
+
+    if PromptServe.name in system_app.components:
+        return
+
+    serve_configs = {s.get_type_value(): s for s in param.serves}
+    global_api_keys = _set_global_app_config(param)
+
+    system_app.register(
+        PromptServe,
+        api_prefix="/prompt",
+        config=get_config(
+            serve_configs,
+            PromptServe.name,
+            PromptServeConfig,
+            default_user="dbgpt",
+            default_sys_code="dbgpt",
+            api_keys=global_api_keys,
+        ),
+    )
+
+    prompt_component = system_app.get_component(PromptServe.name, PromptServe)
+    prompt_component.on_init()
+    prompt_component.before_start()
+
+
+def _set_global_app_config(param: ApplicationConfig) -> Optional[str]:
+    """Set shared app config values used by early serve initialization."""
+    global_api_keys = None
+    if param.system.api_keys:
+        global_api_keys = ",".join(param.system.api_keys)
+        system_app.config.set(
+            "dbgpt.app.global.api_keys", global_api_keys, overwrite=True
+        )
+    if param.system.encrypt_key:
+        system_app.config.set(
+            "dbgpt.app.global.encrypt_key",
+            param.system.encrypt_key,
+            overwrite=True,
+        )
+    system_app.config.set(
+        "dbgpt.app.global.language", param.system.language, overwrite=True
+    )
+    return global_api_keys
+
+
+def _init_permission_serve(param: ApplicationConfig):
+    """Register and start the permission serve so login works immediately."""
+    from dbgpt_app.initialization.serve_initialization import get_config
+    from dbgpt_serve.permission.config import ServeConfig as PermissionServeConfig
+    from dbgpt_serve.permission.serve import Serve as PermissionServe
+
+    # Set global config values that permission serve depends on
+    serve_configs = {s.get_type_value(): s for s in param.serves}
+    global_api_keys = _set_global_app_config(param)
+
+    # Register permission serve
+    system_app.register(
+        PermissionServe,
+        config=get_config(
+            serve_configs,
+            PermissionServe.name,
+            PermissionServeConfig,
+            api_keys=global_api_keys,
+        ),
+    )
+
+    # Trigger its lifecycle so it creates tables and default admin user
+    permission_component = system_app.get_component(
+        PermissionServe.name, PermissionServe
+    )
+    permission_component.on_init()
+    permission_component.before_start()
+
+
+# ---------------------------------------------------------------------------
+# Phase 2: Deferred initialization (runs in background after uvicorn starts)
+# ---------------------------------------------------------------------------
+def _init_deferred(param: ApplicationConfig):
+    """Phase 2: Non-critical initialization that runs after uvicorn is listening.
+
+    Includes component registration, model worker setup, and other heavy work.
+    """
+    start_time = time.time()
+    logger.info("Phase 2 (deferred init) starting...")
+
+    try:
+        from dbgpt.model.cluster import initialize_worker_manager_in_client
+
+        web_config = param.service.web
+        model_start_listener = _create_model_start_listener(system_app)
+
+        # Register all components (embedding, AWEL, agent, serves, etc.)
+        initialize_components(param, system_app)
+
+        # Lifecycle hooks
+        system_app.on_init()
+        system_app.after_init()
+
+        # Register default data sources
+        _register_default_datasources()
+
+        # Model worker initialization
+        binding_port = web_config.port
+        binding_host = web_config.host
+        if not web_config.light:
+            from dbgpt.model.cluster.storage import ModelStorage
+            from dbgpt_serve.model.serve import Serve as ModelServe
+
+            logger.info(
+                "Model Unified Deployment Mode, run all services in the same process"
+            )
+            model_serve = ModelServe.get_instance(system_app)
+            model_storage = ModelStorage(model_serve.model_storage)
+            initialize_worker_manager_in_client(
+                worker_params=param.service.model.worker,
+                models_config=param.models,
+                app=app,
+                binding_port=binding_port,
+                binding_host=binding_host,
+                start_listener=model_start_listener,
+                system_app=system_app,
+                model_storage=model_storage,
+            )
+        else:
+            controller_addr = web_config.controller_addr
+            param.models.llms = []
+            param.models.rerankers = []
+            param.models.embeddings = []
+            initialize_worker_manager_in_client(
+                worker_params=param.service.model.worker,
+                models_config=param.models,
+                app=app,
+                run_locally=False,
+                controller_addr=controller_addr,
+                binding_port=binding_port,
+                binding_host=binding_host,
+                start_listener=model_start_listener,
+                system_app=system_app,
+            )
+
+        # Final lifecycle hook
+        system_app.before_start()
+
+        elapsed = time.time() - start_time
+        logger.info(
+            f"Phase 2 (deferred init) complete in {elapsed:.1f}s - all services ready"
+        )
+    except Exception as e:
+        logger.error(f"Phase 2 (deferred init) failed: {e}", exc_info=True)
+    finally:
+        # Mark app as fully ready regardless (partial functionality is better
+        # than permanent 503)
+        _app_ready.set()
+
+
+def _register_default_datasources():
+    """Register default example data sources."""
     try:
         from dbgpt.configs.model_config import PILOT_PATH, ROOT_PATH
         from dbgpt_serve.datasource.manages.connect_config_db import ConnectConfigDao
@@ -190,8 +413,8 @@ def initialize_app(param: ApplicationConfig, args: List[str] = None):
             )
             if db_absolute_path is None:
                 logger.info(
-                    f"Skipping default data source '%s': file not found in any "
-                    f"{db_name} at {candidate_paths}"
+                    f"Skipping default data source '{db_name}': file not found "
+                    f"at {candidate_paths}"
                 )
             else:
                 dao.add_file_db(
@@ -207,53 +430,6 @@ def initialize_app(param: ApplicationConfig, args: List[str] = None):
     except Exception as e:
         logger.error(f"Failed to register default data sources: {str(e)}")
 
-    binding_port = web_config.port
-    binding_host = web_config.host
-    if not web_config.light:
-        from dbgpt.model.cluster.storage import ModelStorage
-        from dbgpt_serve.model.serve import Serve as ModelServe
-
-        logger.info(
-            "Model Unified Deployment Mode, run all services in the same process"
-        )
-        model_serve = ModelServe.get_instance(system_app)
-        # Persistent model storage
-        model_storage = ModelStorage(model_serve.model_storage)
-        initialize_worker_manager_in_client(
-            worker_params=param.service.model.worker,
-            models_config=param.models,
-            app=app,
-            binding_port=binding_port,
-            binding_host=binding_host,
-            start_listener=model_start_listener,
-            system_app=system_app,
-            model_storage=model_storage,
-        )
-
-    else:
-        # MODEL_SERVER is controller address now
-        controller_addr = web_config.controller_addr
-        param.models.llms = []
-        param.models.rerankers = []
-        param.models.embeddings = []
-        initialize_worker_manager_in_client(
-            worker_params=param.service.model.worker,
-            models_config=param.models,
-            app=app,
-            run_locally=False,
-            controller_addr=controller_addr,
-            binding_port=binding_port,
-            binding_host=binding_host,
-            start_listener=model_start_listener,
-            system_app=system_app,
-        )
-
-    mount_static_files(app, param)
-
-    # Before start, after on_init
-    system_app.before_start()
-    return param
-
 
 def run_uvicorn(param: ServiceWebParameters):
     import uvicorn
@@ -268,8 +444,8 @@ def run_uvicorn(param: ServiceWebParameters):
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
-    log_level = "info"
-    if param.log:
+    log_level = logging_str_to_uvicorn_level("WARNING")
+    if param.log and param.log.level:
         log_level = logging_str_to_uvicorn_level(param.log.level)
     uvicorn.run(
         cors_app,
@@ -304,16 +480,16 @@ def run_webserver(config_file: str):
             "sys_infos": _get_dict_from_obj(get_system_info()),
         },
     ):
-        param = initialize_app(param)
+        # Phase 1: Critical path only (fast)
+        _init_critical(param)
 
-        # TODO
-        from dbgpt_serve.agent.agents.expand.app_start_assisant_agent import (  # noqa: F401
-            StartAppAssistantAgent,
+        # Schedule Phase 2 to run in a background thread after uvicorn starts
+        deferred_thread = threading.Thread(
+            target=_init_deferred, args=(param,), daemon=True
         )
-        from dbgpt_serve.agent.agents.expand.intent_recognition_agent import (  # noqa: F401
-            IntentRecognitionAgent,
-        )
+        deferred_thread.start()
 
+        # Start uvicorn immediately (server accepts requests now)
         run_uvicorn(param.service.web)
 
 

@@ -2,9 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-# NOTE: `./packages/*` was invalid (gitignore doesn't allow `./` prefix).
-# For untracked files under packages/, see `/packages/` rule below.
-# For tracked files, use: git update-index --skip-worktree <path>
+# C extensions (packages/ ignore removed - now tracked normally)
 # C extensions
 message/
 dbgpt/util/extensions/
@@ -209,4 +207,4 @@ test_docs
 .qoder/
 .qwencode/
 .sisyphus/
-/packages/
+/packages/dbgpt-app/src/dbgpt_app/static/*

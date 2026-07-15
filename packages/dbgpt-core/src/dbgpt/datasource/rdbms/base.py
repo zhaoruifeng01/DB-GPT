@@ -33,6 +33,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import CreateTable
 
 from dbgpt.datasource.base import BaseConnector
+from dbgpt.util.db_performance import attach_slow_query_logger
 from dbgpt.util.i18n_utils import _
 from dbgpt_ext.datasource.schema import DBType
 
@@ -210,7 +211,9 @@ class RDBMSConnector(BaseConnector):
     ) -> "RDBMSConnector":
         """Construct a SQLAlchemy engine from URI."""
         _engine_args = engine_args or {}
-        return cls(create_engine(database_uri, **_engine_args), **kwargs)
+        engine = create_engine(database_uri, **_engine_args)
+        attach_slow_query_logger(engine)
+        return cls(engine, **kwargs)
 
     @property
     def db_url(self) -> str:

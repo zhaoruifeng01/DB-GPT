@@ -4,7 +4,7 @@ import { apiInterceptors } from '@/client/api/tools/interceptors';
 import { DarkSvg, ModelSvg, SunnySvg } from '@/components/icons';
 import UserBar from '@/new-components/layout/UserBar';
 import type { IChatDialogueSchema } from '@/types/chat';
-import { STORAGE_LANG_KEY, STORAGE_THEME_KEY } from '@/utils/constants/index';
+import { STORAGE_LANG_KEY, STORAGE_THEME_KEY, STORAGE_USERINFO_KEY } from '@/utils/constants/index';
 import Icon, {
   ApartmentOutlined,
   ApiOutlined,
@@ -19,6 +19,7 @@ import Icon, {
   MessageOutlined,
   PlusOutlined,
   RightOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { Popover, Skeleton, Tooltip, message } from 'antd';
 import cls from 'classnames';
@@ -72,10 +73,12 @@ function SideBar() {
     pathname.startsWith('/construct/dbgpts') ||
     pathname.startsWith('/construct/models') ||
     pathname.startsWith('/construct/scheduled-tasks') ||
-    pathname === '/models_evaluation';
+    pathname === '/models_evaluation' ||
+    pathname.startsWith('/construct/permission');
   const { t, i18n } = useTranslation();
   const [logo, setLogo] = useState<string>('/logo_zh_latest.png');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string>('normal');
   const [dialogueList, setDialogueList] = useState<IChatDialogueSchema[]>([]);
   const [loadingDialogues, setLoadingDialogues] = useState(false);
 
@@ -303,8 +306,35 @@ function SideBar() {
         <LineChartOutlined className='text-red-500' />
         <span>{t('models_evaluation')}</span>
       </div>
+      {userRole === 'admin' && (
+        <div
+          onClick={() => {
+            router.push('/construct/permission');
+            setSettingsOpen(false);
+          }}
+          className={cls(
+            'flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors',
+            {
+              'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400':
+                pathname.startsWith('/construct/permission'),
+            },
+          )}
+        >
+          <TeamOutlined className='text-indigo-500' />
+          <span>{t('permission_management')}</span>
+        </div>
+      )}
     </div>
   );
+
+  useEffect(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem(STORAGE_USERINFO_KEY) ?? '{}');
+      setUserRole(user?.role || 'normal');
+    } catch {
+      setUserRole('normal');
+    }
+  }, []);
 
   useEffect(() => {
     const language = i18n.language;

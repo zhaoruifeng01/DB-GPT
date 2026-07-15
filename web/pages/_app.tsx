@@ -1,7 +1,7 @@
 import { ChatContext, ChatContextProvider } from '@/app/chat-context';
 import SideBar from '@/components/layout/side-bar';
 import FloatHelper from '@/new-components/layout/FloatHelper';
-import { STORAGE_LANG_KEY, STORAGE_USERINFO_KEY, STORAGE_USERINFO_VALID_TIME_KEY } from '@/utils/constants/index';
+import { STORAGE_LANG_KEY, STORAGE_TOKEN_KEY, STORAGE_USERINFO_KEY } from '@/utils/constants/index';
 import { App, ConfigProvider, MappingAlgorithm, theme } from 'antd';
 import enUS from 'antd/locale/en_US';
 import zhCN from 'antd/locale/zh_CN';
@@ -62,22 +62,12 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
   // 登录检测
   const handleAuth = async () => {
     setIsLogin(false);
-    // 如果已有登录信息，直接展示首页
-    // if (localStorage.getItem(STORAGE_USERINFO_KEY)) {
-    //   setIsLogin(true);
-    //   return;
-    // }
-
-    // MOCK User info
-    const user = {
-      user_channel: `dbgpt`,
-      user_no: `001`,
-      nick_name: `dbgpt`,
-    };
-    if (user) {
-      localStorage.setItem(STORAGE_USERINFO_KEY, JSON.stringify(user));
-      localStorage.setItem(STORAGE_USERINFO_VALID_TIME_KEY, Date.now().toString());
+    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+    const userInfo = localStorage.getItem(STORAGE_USERINFO_KEY);
+    if (token && userInfo) {
       setIsLogin(true);
+    } else if (!router.pathname.startsWith('/login') && !router.pathname.startsWith('/share')) {
+      router.push('/login');
     }
   };
 
@@ -85,11 +75,16 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
     handleAuth();
   }, []);
 
-  if (!isLogin && !router.pathname.startsWith('/share')) {
+  if (!isLogin && !router.pathname.startsWith('/share') && !router.pathname.startsWith('/login')) {
     return null;
   }
 
   const renderContent = () => {
+    // Login page renders without sidebar
+    if (router.pathname.startsWith('/login')) {
+      return <>{children}</>;
+    }
+
     // Hide sidebar for mobile, share pages, and task replay mode (from_task)
     const hideSidebar =
       router.pathname.includes('mobile') || router.pathname.startsWith('/share') || !!router.query.from_task;

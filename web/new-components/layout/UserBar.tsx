@@ -1,11 +1,17 @@
 import { UserInfoResponse } from '@/types/userinfo';
-import { STORAGE_USERINFO_KEY } from '@/utils/constants/index';
-import { Avatar } from 'antd';
+import { STORAGE_TOKEN_KEY, STORAGE_USERINFO_KEY } from '@/utils/constants/index';
+import { LogoutOutlined } from '@ant-design/icons';
+import { Avatar, Tooltip } from 'antd';
 import cls from 'classnames';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function UserBar({ onlyAvatar = false }) {
   const [userInfo, setUserInfo] = useState<UserInfoResponse>();
+  const router = useRouter();
+  const { t } = useTranslation();
+
   useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem(STORAGE_USERINFO_KEY) ?? '');
@@ -15,11 +21,11 @@ function UserBar({ onlyAvatar = false }) {
     }
   }, []);
 
-  // TODO: delete unused function
-  // const logout = () => {
-  //   localStorage.removeItem(STORAGE_USERINFO_KEY);
-  //   window.location.href = `${process.env.LOGOUT_URL}&goto=${encodeURIComponent(window.location.href)}`;
-  // };
+  const logout = () => {
+    localStorage.removeItem(STORAGE_TOKEN_KEY);
+    localStorage.removeItem(STORAGE_USERINFO_KEY);
+    router.push('/login');
+  };
 
   return (
     <div className='flex flex-1 items-center justify-center'>
@@ -41,12 +47,14 @@ function UserBar({ onlyAvatar = false }) {
             {userInfo?.nick_name}
           </span>
         </span>
-        {/* <LogoutOutlined
-          onClick={logout}
-          className={cls('cursor-pointer opacity-0 transition-all hover:opacity-100 group-hover:opacity-70', {
-            hidden: onlyAvatar,
-          })}
-        /> */}
+        <Tooltip title={t('logout')}>
+          <LogoutOutlined
+            onClick={logout}
+            className={cls('cursor-pointer opacity-0 transition-all hover:opacity-100 group-hover:opacity-70', {
+              hidden: onlyAvatar,
+            })}
+          />
+        </Tooltip>
       </div>
     </div>
   );

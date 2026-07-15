@@ -90,7 +90,7 @@ function Database() {
   const onDelete = (item: DBItem) => {
     Modal.confirm({
       title: 'Tips',
-      content: `Do you Want to delete the database connection?`,
+      content: `你确定要删除这个数据库连接吗`,
       onOk() {
         return new Promise<void>((resolve, reject) => {
           handleDelete(item.id, resolve, reject);

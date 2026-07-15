@@ -16,6 +16,7 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.pool import QueuePool
 
+from dbgpt.util.db_performance import attach_slow_query_logger
 from dbgpt.util.pagination_utils import PaginationResult
 from dbgpt.util.string_utils import _to_str
 
@@ -309,6 +310,7 @@ class DatabaseManager:
             if not hasattr(base, "__db_manager__") or override_query_class:
                 base.__db_manager__ = self
         self._engine = create_engine(db_url, **(engine_args or {}))
+        attach_slow_query_logger(self._engine)
 
         session_options.setdefault("class_", Session)
         session_options.setdefault("query_cls", self.Query)
