@@ -1,5 +1,6 @@
 """Serve component that embeds governance in the DB-GPT API server."""
 
+import logging
 from typing import List, Optional, Union
 
 from sqlalchemy import URL
@@ -16,6 +17,8 @@ from dbgpt_serve.governance.config import (
     ServeConfig,
 )
 from dbgpt_serve.governance.service import GovernanceService
+
+logger = logging.getLogger(__name__)
 
 
 class GovernanceServe(BaseServe):
@@ -52,15 +55,39 @@ class GovernanceServe(BaseServe):
     def on_init(self):
         from . import models as _  # noqa: F401
 
+    def _ensure_governance_tables(self, db_manager: DatabaseManager) -> None:
+        from dbgpt_serve.governance.models import (
+            GovernanceAccessRequestEntity,
+            GovernanceApiKeyEntity,
+            GovernanceAuditLogEntity,
+            GovernanceCatalogProductEntity,
+            GovernanceDatasourcePolicyEntity,
+            GovernanceMaskRuleEntity,
+            GovernanceRoleGrantEntity,
+        )
+
+        entities = (
+            GovernanceDatasourcePolicyEntity,
+            GovernanceRoleGrantEntity,
+            GovernanceMaskRuleEntity,
+            GovernanceCatalogProductEntity,
+            GovernanceAccessRequestEntity,
+            GovernanceApiKeyEntity,
+            GovernanceAuditLogEntity,
+        )
+        for entity in entities:
+            entity.__table__.create(bind=db_manager.engine, checkfirst=True)
+        logger.info("Governance metadata tables are ready.")
+
     def before_start(self):
         config = self._config or ServeConfig.from_app_config(
             self._system_app.config, SERVE_CONFIG_KEY_PREFIX
         )
         if not config.enabled:
             return
-        self._service = GovernanceService(
-            self._system_app, self.create_or_get_db_manager(), config
-        )
+        db_manager = self.create_or_get_db_manager()
+        self._ensure_governance_tables(db_manager)
+        self._service = GovernanceService(self._system_app, db_manager, config)
         init_endpoints(self._system_app, self._service)
 
     @property
