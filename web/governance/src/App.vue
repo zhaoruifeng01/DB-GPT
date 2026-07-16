@@ -35,6 +35,14 @@ const tabs: Array<{ key: Tab; name: string; hint: string }> = [
 ]
 
 const title = computed(() => tabs.find(tab => tab.key === activeTab.value)?.name ?? '')
+const currentHint = computed(() => tabs.find(tab => tab.key === activeTab.value)?.hint ?? '')
+const overviewCards = computed(() => [
+  { key: 'datasources', label: '数据源', value: overview.value.datasources ?? 0 },
+  { key: 'grants', label: '授权策略', value: overview.value.grants ?? 0 },
+  { key: 'mask_rules', label: '脱敏规则', value: overview.value.mask_rules ?? 0 },
+  { key: 'catalog_products', label: '数据产品', value: overview.value.catalog_products ?? 0 },
+  { key: 'pending_requests', label: '待审批', value: overview.value.pending_requests ?? 0 },
+])
 const unwrap = <T,>(response: { data: { data: T } }) => response.data.data
 
 async function loadDatasources() {
@@ -117,39 +125,104 @@ onMounted(load)
 </script>
 
 <template>
-  <main class="min-h-screen bg-slate-100 text-slate-900">
-    <header class="border-b border-slate-200 bg-white px-6 py-4">
-      <div class="mx-auto flex max-w-7xl items-center justify-between">
-        <div><p class="text-sm font-medium text-sky-700">DB-GPT</p><h1 class="text-xl font-semibold">数据治理</h1></div>
-        <a class="text-sm text-slate-600 hover:text-sky-700" href="/construct/database">返回 DB-GPT</a>
+  <main class="governance-shell">
+    <header class="governance-header">
+      <div>
+        <p class="eyebrow">DB-GPT Governance</p>
+        <h1>数据治理</h1>
+        <p class="header-desc">统一身份、统一 API Server、统一数据源连接管理</p>
       </div>
+      <button class="ghost-btn" @click="load">刷新</button>
     </header>
 
-    <div class="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[220px_1fr]">
-      <aside class="h-fit border border-slate-200 bg-white p-2">
-        <button v-for="tab in tabs" :key="tab.key" class="mb-1 block w-full px-3 py-3 text-left text-sm" :class="activeTab === tab.key ? 'bg-sky-700 text-white' : 'text-slate-700 hover:bg-slate-100'" @click="changeTab(tab.key)">
-          <span class="block font-medium">{{ tab.name }}</span><span class="mt-1 block text-xs opacity-75">{{ tab.hint }}</span>
+    <div class="governance-layout">
+      <aside class="governance-nav">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="nav-item"
+          :class="{ active: activeTab === tab.key }"
+          @click="changeTab(tab.key)"
+        >
+          <span>{{ tab.name }}</span>
+          <small>{{ tab.hint }}</small>
         </button>
       </aside>
 
-      <section class="min-w-0">
-        <div class="mb-5 flex items-center justify-between"><div><h2 class="text-lg font-semibold">{{ title }}</h2><p class="mt-1 text-sm text-slate-500">统一身份、统一 API Server、统一数据源连接管理</p></div><button class="border border-slate-300 bg-white px-3 py-2 text-sm hover:border-sky-700" @click="load">刷新</button></div>
-        <p v-if="error" class="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error }}</p>
-        <p v-if="notice" class="mb-4 border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">{{ notice }}</p>
-        <p v-if="loading" class="border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">正在加载…</p>
-
-        <div v-if="!loading && activeTab === 'overview'" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5"><article v-for="(value, key) in overview" :key="key" class="border border-slate-200 bg-white p-4"><p class="text-xs text-slate-500">{{ String(key).replaceAll('_', ' ') }}</p><p class="mt-2 text-2xl font-semibold">{{ value }}</p></article></div>
-
-        <div v-if="!loading && activeTab === 'datasources'" class="overflow-x-auto border border-slate-200 bg-white"><table class="w-full min-w-[680px] text-left text-sm"><thead class="border-b bg-slate-50 text-slate-500"><tr><th class="p-3">名称</th><th class="p-3">类型</th><th class="p-3">治理状态</th><th class="p-3">健康度</th><th class="p-3"></th></tr></thead><tbody><tr v-for="item in datasources" :key="item.id" class="border-b last:border-0"><td class="p-3 font-medium">{{ item.db_name }}</td><td class="p-3">{{ item.db_type }}</td><td class="p-3">{{ item.policy?.status || '待纳管' }}</td><td class="p-3">{{ item.policy?.health_status || 'unknown' }}</td><td class="p-3 text-right"><button class="text-sky-700 hover:underline" @click="testDatasource(item.id)">检查连接</button></td></tr></tbody></table></div>
-
-        <div v-if="!loading && activeTab === 'policies'" class="grid gap-5 xl:grid-cols-2">
-          <article class="border border-slate-200 bg-white p-4"><h3 class="font-semibold">角色数据授权</h3><form class="mt-4 grid gap-3" @submit.prevent="createGrant"><input v-model="grantForm.role_code" required placeholder="DB-GPT role_code" class="border border-slate-300 px-3 py-2 text-sm"><select v-model="grantForm.datasource_id" required class="border border-slate-300 px-3 py-2 text-sm"><option :value="0" disabled>选择数据源</option><option v-for="item in datasources" :key="item.id" :value="item.id">{{ item.db_name }}</option></select><input v-model="grantForm.table_pattern" placeholder="表名或通配符" class="border border-slate-300 px-3 py-2 text-sm"><select v-model="grantForm.permission" class="border border-slate-300 px-3 py-2 text-sm"><option value="query">查询</option><option value="manage">管理</option></select><button class="bg-sky-700 px-3 py-2 text-sm text-white">添加授权</button></form><ul class="mt-4 divide-y"><li v-for="grant in grants" :key="grant.id" class="flex items-center justify-between py-2 text-sm"><span>{{ grant.role_code }} · 数据源 {{ grant.datasource_id }} · {{ grant.table_pattern }} · {{ grant.permission }}</span><button class="text-red-700" @click="removeGrant(grant.id)">删除</button></li></ul></article>
-          <article class="border border-slate-200 bg-white p-4"><h3 class="font-semibold">字段脱敏</h3><form class="mt-4 grid gap-3" @submit.prevent="createMaskRule"><select v-model="maskForm.datasource_id" required class="border border-slate-300 px-3 py-2 text-sm"><option :value="0" disabled>选择数据源</option><option v-for="item in datasources" :key="item.id" :value="item.id">{{ item.db_name }}</option></select><input v-model="maskForm.table_name" placeholder="表名或通配符" class="border border-slate-300 px-3 py-2 text-sm"><input v-model="maskForm.column_name" required placeholder="字段名" class="border border-slate-300 px-3 py-2 text-sm"><input v-model="maskForm.role_code" placeholder="仅对角色生效（可选）" class="border border-slate-300 px-3 py-2 text-sm"><select v-model="maskForm.mask_type" class="border border-slate-300 px-3 py-2 text-sm"><option value="partial">部分掩码</option><option value="full">全掩码</option><option value="hash">哈希</option><option value="email">邮箱</option></select><button class="bg-sky-700 px-3 py-2 text-sm text-white">添加规则</button></form><ul class="mt-4 divide-y"><li v-for="rule in maskRules" :key="rule.id" class="flex items-center justify-between py-2 text-sm"><span>数据源 {{ rule.datasource_id }} · {{ rule.table_name }}.{{ rule.column_name }} · {{ rule.mask_type }}</span><button class="text-red-700" @click="removeMaskRule(rule.id)">删除</button></li></ul></article>
+      <section class="governance-content">
+        <div class="content-title">
+          <div>
+            <h2>{{ title }}</h2>
+            <p>{{ currentHint }}</p>
+          </div>
+          <span class="status-pill">统一认证</span>
         </div>
 
-        <div v-if="!loading && activeTab === 'catalog'" class="grid gap-5 xl:grid-cols-[360px_1fr]"><article class="border border-slate-200 bg-white p-4"><h3 class="font-semibold">发布数据产品</h3><form class="mt-4 grid gap-3" @submit.prevent="createProduct"><input v-model="productForm.product_key" required placeholder="产品 Key" class="border border-slate-300 px-3 py-2 text-sm"><input v-model="productForm.title" required placeholder="展示名称" class="border border-slate-300 px-3 py-2 text-sm"><select v-model="productForm.datasource_id" required class="border border-slate-300 px-3 py-2 text-sm"><option :value="0" disabled>选择数据源</option><option v-for="item in datasources" :key="item.id" :value="item.id">{{ item.db_name }}</option></select><textarea v-model="productForm.description" placeholder="说明" class="border border-slate-300 px-3 py-2 text-sm"></textarea><textarea v-model="productForm.resource_definition" placeholder="TABLE 或手写只读 SQL 定义" class="border border-slate-300 px-3 py-2 text-sm"></textarea><button class="bg-sky-700 px-3 py-2 text-sm text-white">保存草稿</button></form></article><article class="border border-slate-200 bg-white"><div class="border-b p-4"><h3 class="font-semibold">数据产品目录</h3></div><ul class="divide-y"><li v-for="product in products" :key="product.id" class="p-4"><p class="font-medium">{{ product.title }}</p><p class="mt-1 text-sm text-slate-500">{{ product.product_key }} · {{ product.resource_type }} · {{ product.status }}</p><p v-if="product.description" class="mt-2 text-sm text-slate-600">{{ product.description }}</p></li></ul></article></div>
+        <p v-if="error" class="alert danger">{{ error }}</p>
+        <p v-if="notice" class="alert info">{{ notice }}</p>
+        <p v-if="loading" class="loading-card">正在加载治理数据…</p>
 
-        <div v-if="!loading && activeTab === 'audit'" class="overflow-x-auto border border-slate-200 bg-white"><table class="w-full min-w-[720px] text-left text-sm"><thead class="border-b bg-slate-50 text-slate-500"><tr><th class="p-3">时间</th><th class="p-3">用户</th><th class="p-3">操作</th><th class="p-3">数据源</th><th class="p-3">结果</th><th class="p-3">详情</th></tr></thead><tbody><tr v-for="audit in audits" :key="audit.id" class="border-b last:border-0"><td class="p-3">{{ audit.gmt_created }}</td><td class="p-3">{{ audit.username }}</td><td class="p-3">{{ audit.action }}</td><td class="p-3">{{ audit.datasource_id || '-' }}</td><td class="p-3">{{ audit.status }}</td><td class="p-3 text-slate-500">{{ audit.detail || '-' }}</td></tr></tbody></table></div>
+        <div v-if="!loading && activeTab === 'overview'" class="metric-grid">
+          <article v-for="card in overviewCards" :key="card.key" class="metric-card">
+            <span>{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+          </article>
+        </div>
+
+        <div v-if="!loading && activeTab === 'datasources'" class="panel table-panel">
+          <table>
+            <thead>
+              <tr><th>名称</th><th>类型</th><th>治理状态</th><th>健康度</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in datasources" :key="item.id">
+                <td class="strong">{{ item.db_name }}</td>
+                <td>{{ item.db_type }}</td>
+                <td><span class="tag">{{ item.policy?.status || '待纳管' }}</span></td>
+                <td>{{ item.policy?.health_status || 'unknown' }}</td>
+                <td class="right"><button class="link-btn" @click="testDatasource(item.id)">检查连接</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="!loading && activeTab === 'policies'" class="grid gap-5 xl:grid-cols-2">
+          <article class="panel">
+            <h3>角色数据授权</h3>
+            <form class="form-grid" @submit.prevent="createGrant">
+              <input v-model="grantForm.role_code" required placeholder="DB-GPT role_code" class="control">
+              <select v-model="grantForm.datasource_id" required class="control"><option :value="0" disabled>选择数据源</option><option v-for="item in datasources" :key="item.id" :value="item.id">{{ item.db_name }}</option></select>
+              <input v-model="grantForm.table_pattern" placeholder="表名或通配符" class="control">
+              <select v-model="grantForm.permission" class="control"><option value="query">查询</option><option value="manage">管理</option></select>
+              <button class="primary-btn">添加授权</button>
+            </form>
+            <ul class="record-list"><li v-for="grant in grants" :key="grant.id"><span>{{ grant.role_code }} · 数据源 {{ grant.datasource_id }} · {{ grant.table_pattern }} · {{ grant.permission }}</span><button class="danger-btn" @click="removeGrant(grant.id)">删除</button></li></ul>
+          </article>
+          <article class="panel">
+            <h3>字段脱敏</h3>
+            <form class="form-grid" @submit.prevent="createMaskRule">
+              <select v-model="maskForm.datasource_id" required class="control"><option :value="0" disabled>选择数据源</option><option v-for="item in datasources" :key="item.id" :value="item.id">{{ item.db_name }}</option></select>
+              <input v-model="maskForm.table_name" placeholder="表名或通配符" class="control">
+              <input v-model="maskForm.column_name" required placeholder="字段名" class="control">
+              <input v-model="maskForm.role_code" placeholder="仅对角色生效（可选）" class="control">
+              <select v-model="maskForm.mask_type" class="control"><option value="partial">部分掩码</option><option value="full">全掩码</option><option value="hash">哈希</option><option value="email">邮箱</option></select>
+              <button class="primary-btn">添加规则</button>
+            </form>
+            <ul class="record-list"><li v-for="rule in maskRules" :key="rule.id"><span>数据源 {{ rule.datasource_id }} · {{ rule.table_name }}.{{ rule.column_name }} · {{ rule.mask_type }}</span><button class="danger-btn" @click="removeMaskRule(rule.id)">删除</button></li></ul>
+          </article>
+        </div>
+
+        <div v-if="!loading && activeTab === 'catalog'" class="grid gap-5 xl:grid-cols-[360px_1fr]">
+          <article class="panel"><h3>发布数据产品</h3><form class="form-grid" @submit.prevent="createProduct"><input v-model="productForm.product_key" required placeholder="产品 Key" class="control"><input v-model="productForm.title" required placeholder="展示名称" class="control"><select v-model="productForm.datasource_id" required class="control"><option :value="0" disabled>选择数据源</option><option v-for="item in datasources" :key="item.id" :value="item.id">{{ item.db_name }}</option></select><textarea v-model="productForm.description" placeholder="说明" class="control"></textarea><textarea v-model="productForm.resource_definition" placeholder="TABLE 或手写只读 SQL 定义" class="control"></textarea><button class="primary-btn">保存草稿</button></form></article>
+          <article class="panel table-panel"><h3>数据产品目录</h3><ul class="product-list"><li v-for="product in products" :key="product.id"><p>{{ product.title }}</p><small>{{ product.product_key }} · {{ product.resource_type }} · {{ product.status }}</small><span v-if="product.description">{{ product.description }}</span></li></ul></article>
+        </div>
+
+        <div v-if="!loading && activeTab === 'audit'" class="panel table-panel">
+          <table>
+            <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>数据源</th><th>结果</th><th>详情</th></tr></thead>
+            <tbody><tr v-for="audit in audits" :key="audit.id"><td>{{ audit.gmt_created }}</td><td>{{ audit.username }}</td><td>{{ audit.action }}</td><td>{{ audit.datasource_id || '-' }}</td><td>{{ audit.status }}</td><td class="muted">{{ audit.detail || '-' }}</td></tr></tbody>
+          </table>
+        </div>
       </section>
     </div>
   </main>
