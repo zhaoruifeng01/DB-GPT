@@ -103,3 +103,35 @@ Compute the product of two numbers when asked.
         # If PyYAML is available, config should include precision
         if cfg:
             assert cfg.get("precision") == 2
+
+
+def test_skillloader_directory_scan_ignores_non_skill_markdown(tmp_path, caplog):
+    """Directory loading should not parse reference Markdown files as skills."""
+    skill_md = """
+---
+name: report-assistant
+description: Helps analyze reports
+---
+
+Use this skill for report analysis.
+"""
+
+    skills_dir = tmp_path / "skills"
+    _write_skill_md(skills_dir / "report_assistant" / "SKILL.md", skill_md)
+    _write_skill_md(
+        skills_dir / "INTEGRATION_GUIDE.md",
+        "# Integration Guide\n\nThis is documentation, not a skill.",
+    )
+    _write_skill_md(
+        skills_dir / "report_assistant" / "references" / "analysis_framework.md",
+        "# Analysis Framework\n\nReference material for the skill.",
+    )
+
+    from dbgpt.agent.skill.loader import SkillLoader
+
+    loader = SkillLoader()
+    with caplog.at_level("ERROR", logger="dbgpt.agent.skill.loader"):
+        skills = loader.load_skills_from_directory(str(skills_dir), recursive=True)
+
+    assert [skill.metadata.name for skill in skills] == ["report-assistant"]
+    assert "SKILL file must start with '---'" not in caplog.text

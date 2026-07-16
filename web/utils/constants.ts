@@ -322,6 +322,11 @@ export const dbMapper: Record<DBType, { label: string; icon: string; desc: strin
   },
   spark: { label: 'Spark', icon: '/icons/spark.png', desc: '大规模数据分析的统一引擎。' },
   hive: { label: 'Hive', icon: '/icons/hive.png', desc: '分布式容错数据仓库系统。' },
+  maxcompute: {
+    label: 'MaxCompute',
+    icon: '/icons/db.png',
+    desc: '阿里云提供的大规模数据仓库与计算服务。',
+  },
   space: { label: 'Space', icon: '/icons/knowledge.png', desc: '知识库分析。' },
   tugraph: {
     label: 'TuGraph',

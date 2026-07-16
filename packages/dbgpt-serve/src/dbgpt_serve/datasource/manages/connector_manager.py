@@ -86,6 +86,7 @@ class ConnectorManager(BaseComponent):
         from dbgpt_ext.datasource.rdbms.conn_oceanbase import (  # noqa: F401
             OceanBaseConnector,
         )
+        from dbgpt_ext.datasource.rdbms.conn_odps import OdpsConnector  # noqa: F401
         from dbgpt_ext.datasource.rdbms.conn_openGauss import (  # noqa: F401
             openGaussConnector,
         )
@@ -291,6 +292,11 @@ class ConnectorManager(BaseComponent):
         if not db_type:
             raise ValueError("Unsupported Db Type！" + db_config.get("db_type"))
         connect_instance = self.get_cls_by_dbtype(db_type.value())
+        if db_type.value() == "maxcompute":
+            # MaxCompute uses the PyODPS SDK rather than an SQLAlchemy URI. Restore
+            # its saved parameters and let the connector build the SDK client.
+            parameters = connect_instance.param_class().from_persisted_state(db_config)
+            return parameters.create_connector()
         if db_type.is_file_db():
             db_path = db_config.get("db_path")
             return connect_instance.from_file_path(db_path)  # type: ignore

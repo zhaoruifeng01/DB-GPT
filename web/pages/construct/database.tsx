@@ -13,6 +13,10 @@ import { useTranslation } from 'react-i18next';
 
 type DBItem = DbListResponse[0];
 
+function getDatasourceName(item: DBItem) {
+  return item.params?.database || item.params?.project || item.params?.path || item.db_name || '';
+}
+
 export function isFileDb(dbTypeList: DBOption[], dbType: DBType) {
   return dbTypeList.find(item => item.value === dbType)?.isFileDb;
 }
@@ -207,7 +211,7 @@ function Database() {
           choiceDBType={modal.dbType}
           editValue={modal.info}
           dbTypeData={modal.dbTypeData}
-          dbNames={dbList.map(item => item.params.database)}
+          dbNames={dbList.map(getDatasourceName)}
           onSuccess={() => {
             setModal({ open: false });
             refreshDbList();
@@ -238,8 +242,8 @@ function Database() {
               </Button>
               {dbListByType[draw.type].map(item => (
                 <Card
-                  key={item.params?.database || item.params?.path || ''}
-                  title={item.params?.database || getFileName(item.params?.path) || ''}
+                  key={item.id}
+                  title={getDatasourceName(item) || getFileName(item.params?.path)}
                   extra={
                     <>
                       <RedoOutlined
@@ -267,7 +271,7 @@ function Database() {
                   className='mb-4'
                 >
                   <>
-                    {['host', 'port', 'path', 'user', 'database', 'schema']
+                    {['host', 'port', 'path', 'user', 'database', 'project', 'endpoint', 'schema']
                       // Just handle these keys
                       .filter(key => Object.prototype.hasOwnProperty.call(item.params, key))
                       .map(key => (

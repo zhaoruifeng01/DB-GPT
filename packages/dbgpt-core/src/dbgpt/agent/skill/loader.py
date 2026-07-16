@@ -110,15 +110,17 @@ class SkillLoader:
             logger.warning(f"Directory not found: {directory}")
             return skills
 
-        # Look for JSON/YAML files and Claude-style SKILL.md files
+        # Look for JSON/YAML skill definitions and Claude-style SKILL.md files.
+        # Other Markdown files under references/templates are skill resources, not
+        # standalone skills, so they should not be parsed as SKILL.md.
         pattern = "**/*" if recursive else "*"
         for file_path in path.glob(pattern):
-            if file_path.is_file() and file_path.suffix in [
-                ".json",
-                ".yaml",
-                ".yml",
-                ".md",
-            ]:
+            if not file_path.is_file():
+                continue
+
+            is_structured_skill = file_path.suffix in [".json", ".yaml", ".yml"]
+            is_markdown_skill = file_path.name == "SKILL.md"
+            if is_structured_skill or is_markdown_skill:
                 # load_skill_from_file will dispatch appropriately
                 skill = self.load_skill_from_file(str(file_path))
                 if skill:

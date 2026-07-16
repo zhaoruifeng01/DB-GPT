@@ -42,8 +42,10 @@ function DatabaseForm({
   useEffect(() => {
     if (choiceDBType) {
       setSelectedType(choiceDBType);
+      form.setFieldValue('type', choiceDBType);
+      setParams(dbTypeList.find(type => type.value === choiceDBType)?.parameters || null);
     }
-  }, [choiceDBType]);
+  }, [choiceDBType, dbTypeList, form]);
 
   useEffect(() => {
     if (editValue && getFromRenderData) {
