@@ -64,6 +64,11 @@ const flatDepts = computed(() => {
   walk(depts.value)
   return result
 })
+const permissionStats = computed(() => [
+  { label: '用户', value: users.value.length, hint: '统一登录主体' },
+  { label: '角色', value: roles.value.length, hint: '映射数据授权' },
+  { label: '部门', value: flatDepts.value.length, hint: '组织归属' },
+])
 const unwrap = <T,>(response: { data: { data: T } }) => response.data.data
 
 async function loadDatasources() {
@@ -283,40 +288,96 @@ onMounted(load)
         </div>
 
         <div v-if="!loading && activeTab === 'permission'" class="permission-page">
+          <div class="permission-hero">
+            <div>
+              <p class="section-kicker">Access Control</p>
+              <h3>统一身份与组织策略</h3>
+              <p>用户、角色、部门来自 DB-GPT 原生权限体系；资源授权只引用 role_code。</p>
+            </div>
+            <div class="permission-stats">
+              <article v-for="stat in permissionStats" :key="stat.label">
+                <strong>{{ stat.value }}</strong>
+                <span>{{ stat.label }}</span>
+                <small>{{ stat.hint }}</small>
+              </article>
+            </div>
+          </div>
+
           <div class="segmented-control">
             <button :class="{ active: activePermissionPanel === 'users' }" @click="activePermissionPanel = 'users'">用户</button>
             <button :class="{ active: activePermissionPanel === 'roles' }" @click="activePermissionPanel = 'roles'">角色</button>
             <button :class="{ active: activePermissionPanel === 'depts' }" @click="activePermissionPanel = 'depts'">部门</button>
           </div>
 
-          <div v-if="activePermissionPanel === 'users'" class="grid gap-5 xl:grid-cols-[380px_1fr]">
-            <article class="panel">
-              <h3>新增用户</h3>
-              <form class="form-grid" @submit.prevent="createUser">
-                <input v-model="userForm.username" required placeholder="用户名" class="control">
-                <input v-model="userForm.password" required type="password" placeholder="初始密码" class="control">
-                <input v-model="userForm.real_name" placeholder="姓名" class="control">
-                <input v-model="userForm.email" placeholder="邮箱" class="control">
+          <div v-if="activePermissionPanel === 'users'" class="permission-workspace">
+            <article class="panel entity-form">
+              <div class="panel-heading">
+                <h3>新增用户</h3>
+                <span>账号与组织关系</span>
+              </div>
+              <form class="compact-form" @submit.prevent="createUser">
+                <div class="form-row two">
+                  <input v-model="userForm.username" required placeholder="用户名" class="control">
+                  <input v-model="userForm.password" required type="password" placeholder="初始密码" class="control">
+                </div>
+                <div class="form-row two">
+                  <input v-model="userForm.real_name" placeholder="姓名" class="control">
+                  <input v-model="userForm.email" placeholder="邮箱" class="control">
+                </div>
                 <input v-model="userForm.phone" placeholder="手机号" class="control">
-                <select v-model="userForm.role_ids" multiple class="control multi-control">
-                  <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.role_name }} / {{ role.role_code }}</option>
-                </select>
-                <select v-model="userForm.dept_ids" multiple class="control multi-control">
-                  <option v-for="dept in flatDepts" :key="dept.id" :value="dept.id">{{ dept.dept_name }} / {{ dept.dept_code }}</option>
-                </select>
+
+                <div class="choice-block">
+                  <label>角色</label>
+                  <div class="choice-grid">
+                    <label v-for="role in roles" :key="role.id" class="choice-chip">
+                      <input v-model="userForm.role_ids" type="checkbox" :value="role.id">
+                      <span>{{ role.role_name }}</span>
+                      <small>{{ role.role_code }}</small>
+                    </label>
+                    <span v-if="!roles.length" class="empty-hint">暂无角色，请先创建角色</span>
+                  </div>
+                </div>
+
+                <div class="choice-block">
+                  <label>部门</label>
+                  <div class="choice-grid">
+                    <label v-for="dept in flatDepts" :key="dept.id" class="choice-chip">
+                      <input v-model="userForm.dept_ids" type="checkbox" :value="dept.id">
+                      <span>{{ dept.dept_name }}</span>
+                      <small>{{ dept.dept_code }}</small>
+                    </label>
+                    <span v-if="!flatDepts.length" class="empty-hint">暂无部门，请先创建部门</span>
+                  </div>
+                </div>
+
                 <button class="primary-btn">创建用户</button>
               </form>
             </article>
-            <article class="panel table-panel">
+
+            <article class="panel table-panel entity-list">
+              <div class="table-title">
+                <h3>用户列表</h3>
+                <span>{{ users.length }} 个账号</span>
+              </div>
               <table>
                 <thead><tr><th>用户</th><th>姓名</th><th>角色</th><th>部门</th><th>状态</th><th></th></tr></thead>
                 <tbody>
                   <tr v-for="user in users" :key="user.id">
                     <td class="strong">{{ user.username }}</td>
                     <td>{{ user.real_name || '-' }}</td>
-                    <td><span v-for="role in user.roles" :key="role.id" class="tag mr-1">{{ role.role_code }}</span></td>
-                    <td>{{ formatDepartments(user.departments) }}</td>
-                    <td>{{ user.status === 1 ? '启用' : '停用' }}</td>
+                    <td>
+                      <template v-if="user.roles?.length">
+                        <span v-for="role in user.roles" :key="role.id" class="mini-badge">{{ role.role_code }}</span>
+                      </template>
+                      <span v-else class="muted">-</span>
+                    </td>
+                    <td>
+                      <template v-if="user.departments?.length">
+                        <span v-for="dept in user.departments" :key="dept.id" class="mini-badge subtle">{{ dept.dept_name }}</span>
+                      </template>
+                      <span v-else class="muted">-</span>
+                    </td>
+                    <td><span class="state-dot" :class="{ off: user.status !== 1 }"></span>{{ user.status === 1 ? '启用' : '停用' }}</td>
                     <td class="right"><button class="danger-btn" @click="removeUser(user.id)">删除</button></td>
                   </tr>
                 </tbody>
@@ -324,17 +385,24 @@ onMounted(load)
             </article>
           </div>
 
-          <div v-if="activePermissionPanel === 'roles'" class="grid gap-5 xl:grid-cols-[360px_1fr]">
-            <article class="panel">
-              <h3>新增角色</h3>
-              <form class="form-grid" @submit.prevent="createRole">
+          <div v-if="activePermissionPanel === 'roles'" class="permission-workspace compact">
+            <article class="panel entity-form">
+              <div class="panel-heading">
+                <h3>新增角色</h3>
+                <span>用于资源授权映射</span>
+              </div>
+              <form class="compact-form" @submit.prevent="createRole">
                 <input v-model="roleForm.role_code" required placeholder="角色编码 role_code" class="control">
                 <input v-model="roleForm.role_name" required placeholder="角色名称" class="control">
                 <textarea v-model="roleForm.description" placeholder="说明" class="control"></textarea>
                 <button class="primary-btn">创建角色</button>
               </form>
             </article>
-            <article class="panel table-panel">
+            <article class="panel table-panel entity-list">
+              <div class="table-title">
+                <h3>角色列表</h3>
+                <span>{{ roles.length }} 个角色</span>
+              </div>
               <table>
                 <thead><tr><th>角色编码</th><th>角色名称</th><th>说明</th><th>状态</th><th></th></tr></thead>
                 <tbody>
@@ -342,7 +410,7 @@ onMounted(load)
                     <td class="strong">{{ role.role_code }}</td>
                     <td>{{ role.role_name }}</td>
                     <td class="muted">{{ role.description || '-' }}</td>
-                    <td>{{ role.status === 1 ? '启用' : '停用' }}</td>
+                    <td><span class="state-dot" :class="{ off: role.status !== 1 }"></span>{{ role.status === 1 ? '启用' : '停用' }}</td>
                     <td class="right"><button class="danger-btn" @click="removeRole(role.id)">删除</button></td>
                   </tr>
                 </tbody>
@@ -350,10 +418,13 @@ onMounted(load)
             </article>
           </div>
 
-          <div v-if="activePermissionPanel === 'depts'" class="grid gap-5 xl:grid-cols-[360px_1fr]">
-            <article class="panel">
-              <h3>新增部门</h3>
-              <form class="form-grid" @submit.prevent="createDept">
+          <div v-if="activePermissionPanel === 'depts'" class="permission-workspace compact">
+            <article class="panel entity-form">
+              <div class="panel-heading">
+                <h3>新增部门</h3>
+                <span>维护组织归属</span>
+              </div>
+              <form class="compact-form" @submit.prevent="createDept">
                 <input v-model="deptForm.dept_name" required placeholder="部门名称" class="control">
                 <input v-model="deptForm.dept_code" required placeholder="部门编码" class="control">
                 <select v-model="deptForm.parent_id" class="control">
@@ -364,7 +435,11 @@ onMounted(load)
                 <button class="primary-btn">创建部门</button>
               </form>
             </article>
-            <article class="panel table-panel">
+            <article class="panel table-panel entity-list">
+              <div class="table-title">
+                <h3>部门列表</h3>
+                <span>{{ flatDepts.length }} 个部门</span>
+              </div>
               <table>
                 <thead><tr><th>部门名称</th><th>部门编码</th><th>上级 ID</th><th>状态</th><th></th></tr></thead>
                 <tbody>
@@ -372,7 +447,7 @@ onMounted(load)
                     <td class="strong">{{ dept.dept_name }}</td>
                     <td>{{ dept.dept_code }}</td>
                     <td>{{ dept.parent_id || '-' }}</td>
-                    <td>{{ dept.status === 1 ? '启用' : '停用' }}</td>
+                    <td><span class="state-dot" :class="{ off: dept.status !== 1 }"></span>{{ dept.status === 1 ? '启用' : '停用' }}</td>
                     <td class="right"><button class="danger-btn" @click="removeDept(dept.id)">删除</button></td>
                   </tr>
                 </tbody>
