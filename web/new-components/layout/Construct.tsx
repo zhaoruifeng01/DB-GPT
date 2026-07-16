@@ -56,7 +56,7 @@ function ConstructLayout({ children, className }: { children: React.ReactNode; c
     },
     {
       key: 'governance',
-      name: '数据治理',
+      name: '资源管理',
       icon: <TeamOutlined />,
       path: '/governance',
     },
