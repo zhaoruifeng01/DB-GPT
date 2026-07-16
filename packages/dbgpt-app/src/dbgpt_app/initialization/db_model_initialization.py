@@ -17,6 +17,15 @@ from dbgpt_serve.evaluate.db.benchmark_db import BenchmarkSummaryEntity
 from dbgpt_serve.file.models.models import ServeEntity as FileServeEntity
 from dbgpt_serve.flow.models.models import ServeEntity as FlowServeEntity
 from dbgpt_serve.flow.models.models import VariablesEntity as FlowVariableEntity
+from dbgpt_serve.governance.models import (
+    GovernanceAccessRequestEntity,
+    GovernanceApiKeyEntity,
+    GovernanceAuditLogEntity,
+    GovernanceCatalogProductEntity,
+    GovernanceDatasourcePolicyEntity,
+    GovernanceMaskRuleEntity,
+    GovernanceRoleGrantEntity,
+)
 from dbgpt_serve.prompt.models.models import ServeEntity as PromptManageEntity
 from dbgpt_serve.rag.models.chunk_db import DocumentChunkEntity
 from dbgpt_serve.rag.models.document_db import KnowledgeDocumentEntity
@@ -40,4 +49,11 @@ _MODELS = [
     FlowVariableEntity,
     BenchmarkSummaryEntity,
     ShareLinkEntity,
+    GovernanceDatasourcePolicyEntity,
+    GovernanceRoleGrantEntity,
+    GovernanceMaskRuleEntity,
+    GovernanceCatalogProductEntity,
+    GovernanceAccessRequestEntity,
+    GovernanceApiKeyEntity,
+    GovernanceAuditLogEntity,
 ]

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Dict, Optional, Type, TypeVar
 
 import dbgpt_serve.datasource.serve
+import dbgpt_serve.governance.serve
 from dbgpt.component import SystemApp
 from dbgpt_app.config import ApplicationConfig
 
@@ -25,6 +26,7 @@ def scan_serve_configs():
         "dbgpt_serve.feedback",
         "dbgpt_serve.file",
         "dbgpt_serve.flow",
+        "dbgpt_serve.governance",
         "dbgpt_serve.libro",
         "dbgpt_serve.model",
         "dbgpt_serve.prompt",
@@ -366,3 +368,18 @@ def register_serve_apps(
             ),
         )
     # ######################### Permission Serve Register End ######################
+
+    # ######################### Governance Serve Register Begin ####################
+    # Governance is an in-process module. It deliberately shares DB-GPT's
+    # SystemApp, authentication, metadata database, and HTTP server.
+    from dbgpt_serve.governance.serve import GovernanceServe
+
+    system_app.register(
+        GovernanceServe,
+        config=get_config(
+            serve_configs,
+            GovernanceServe.name,
+            dbgpt_serve.governance.serve.ServeConfig,
+        ),
+    )
+    # ######################### Governance Serve Register End ######################

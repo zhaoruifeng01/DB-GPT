@@ -114,6 +114,16 @@ def mount_static_files(app: FastAPI, param: ApplicationConfig):
         "/_next/static", StaticFiles(directory=static_file_path + "/_next/static")
     )
 
+    # The Yunshu-derived governance UI shares the DB-GPT origin and this same
+    # FastAPI process. It must be mounted before the root static application.
+    governance_static_path = os.path.join(package_dir, "static", "governance")
+    if os.path.isdir(governance_static_path):
+        app.mount(
+            "/governance",
+            StaticFiles(directory=governance_static_path, html=True),
+            name="governance_static",
+        )
+
     # Serve the Next.js dynamic route page for /share/{token}.
     # Next.js static export produces share/[token]/index.html (literal directory
     # name "[token]"), but FastAPI StaticFiles cannot resolve dynamic segments.

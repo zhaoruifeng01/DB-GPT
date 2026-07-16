@@ -581,6 +581,118 @@ CREATE TABLE `share_links` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Conversation share link table';
 
 
+-- Embedded governance module. These tables share DB-GPT's metadata database
+-- and intentionally refer to existing connect_config/sys_role records by id/code.
+CREATE TABLE IF NOT EXISTS `governance_datasource_policy` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `datasource_id` int NOT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'enabled',
+  `business_domain` varchar(128) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `owner_user_id` int DEFAULT NULL,
+  `health_status` varchar(32) NOT NULL DEFAULT 'unknown',
+  `health_message` text DEFAULT NULL,
+  `health_checked_at` datetime DEFAULT NULL,
+  `gmt_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_governance_datasource_policy_datasource` (`datasource_id`),
+  KEY `idx_governance_datasource_policy_owner` (`owner_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Embedded datasource governance policy';
+
+CREATE TABLE IF NOT EXISTS `governance_role_grant` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `role_code` varchar(64) NOT NULL,
+  `datasource_id` int NOT NULL,
+  `table_pattern` varchar(255) NOT NULL DEFAULT '*',
+  `permission` varchar(32) NOT NULL DEFAULT 'query',
+  `allowed_columns` text DEFAULT NULL,
+  `gmt_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_governance_role_grant` (`role_code`,`datasource_id`,`table_pattern`,`permission`),
+  KEY `idx_governance_grant_datasource` (`datasource_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Role code datasource and table grants';
+
+CREATE TABLE IF NOT EXISTS `governance_mask_rule` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `datasource_id` int NOT NULL,
+  `table_name` varchar(255) NOT NULL DEFAULT '*',
+  `column_name` varchar(255) NOT NULL,
+  `role_code` varchar(64) DEFAULT NULL,
+  `mask_type` varchar(32) NOT NULL DEFAULT 'partial',
+  `gmt_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_governance_mask_rule` (`datasource_id`,`table_name`,`column_name`,`role_code`),
+  KEY `idx_governance_mask_datasource` (`datasource_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Datasource column masking rules';
+
+CREATE TABLE IF NOT EXISTS `governance_catalog_product` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_key` varchar(128) NOT NULL,
+  `datasource_id` int NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `resource_type` varchar(32) NOT NULL DEFAULT 'table',
+  `resource_definition` text DEFAULT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'draft',
+  `owner_user_id` int NOT NULL,
+  `rate_limit_per_minute` int NOT NULL DEFAULT 60,
+  `gmt_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_governance_catalog_product_key` (`product_key`),
+  KEY `idx_governance_catalog_datasource` (`datasource_id`),
+  KEY `idx_governance_catalog_owner` (`owner_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Governed data product catalog';
+
+CREATE TABLE IF NOT EXISTS `governance_access_request` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `requester_user_id` int NOT NULL,
+  `reason` text DEFAULT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'pending',
+  `reviewer_user_id` int DEFAULT NULL,
+  `review_comment` text DEFAULT NULL,
+  `gmt_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_governance_request_product_status` (`product_id`,`status`),
+  KEY `idx_governance_request_user` (`requester_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Catalog access approval requests';
+
+CREATE TABLE IF NOT EXISTS `governance_api_key` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  `key_prefix` varchar(16) NOT NULL,
+  `key_hash` varchar(128) NOT NULL,
+  `owner_user_id` int NOT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'active',
+  `expires_at` datetime DEFAULT NULL,
+  `last_used_at` datetime DEFAULT NULL,
+  `gmt_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_governance_api_key_hash` (`key_hash`),
+  KEY `idx_governance_api_key_owner` (`owner_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hashed developer keys bound to DB-GPT users';
+
+CREATE TABLE IF NOT EXISTS `governance_audit_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `username` varchar(128) DEFAULT NULL,
+  `action` varchar(64) NOT NULL,
+  `datasource_id` int DEFAULT NULL,
+  `resource_key` varchar(128) DEFAULT NULL,
+  `sql_text` text DEFAULT NULL,
+  `status` varchar(32) NOT NULL,
+  `detail` text DEFAULT NULL,
+  `gmt_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_governance_audit_user_time` (`user_id`,`gmt_created`),
+  KEY `idx_governance_audit_datasource_time` (`datasource_id`,`gmt_created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Governance audit log';
+
 CREATE
 DATABASE IF NOT EXISTS EXAMPLE_1;
 use EXAMPLE_1;

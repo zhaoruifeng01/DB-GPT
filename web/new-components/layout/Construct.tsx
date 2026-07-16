@@ -55,6 +55,12 @@ function ConstructLayout({ children, className }: { children: React.ReactNode; c
       path: '/database',
     },
     {
+      key: 'governance',
+      name: '数据治理',
+      icon: <TeamOutlined />,
+      path: '/governance/',
+    },
+    {
       key: 'knowledge',
       name: t('Knowledge_Space'),
       icon: <PartitionOutlined />,
@@ -154,6 +160,10 @@ function ConstructLayout({ children, className }: { children: React.ReactNode; c
             };
           })}
           onTabClick={key => {
+            if (key === 'governance') {
+              window.location.assign('/governance/')
+              return
+            }
             router.push(`/construct/${key}`);
           }}
           // tabBarExtraContent={

@@ -208,3 +208,4 @@ test_docs
 .qwencode/
 .sisyphus/
 /packages/dbgpt-app/src/dbgpt_app/static/*
+_upstream/
