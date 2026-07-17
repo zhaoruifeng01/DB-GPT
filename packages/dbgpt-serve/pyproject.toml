@@ -15,7 +15,7 @@ dependencies = [
     # Governance is an embedded FastAPI serve and applies read-only SQL guards.
     # Keep these direct so a standalone dbgpt-serve installation is complete.
     "fastapi>=0.100.0,<0.113.0",
-    "sqlparse==0.4.4",
+    "sqlparse==0.5.5",
 ]
 
 [project.urls]

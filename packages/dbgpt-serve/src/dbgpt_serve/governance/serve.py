@@ -3,7 +3,7 @@
 import logging
 from typing import List, Optional, Union
 
-from sqlalchemy import URL
+from sqlalchemy import URL, inspect
 
 from dbgpt.component import SystemApp
 from dbgpt.storage.metadata import DatabaseManager
@@ -49,34 +49,35 @@ class GovernanceServe(BaseServe):
         if self._app_has_initiated:
             return
         self._system_app = system_app
-        self._system_app.app.include_router(router, prefix=self._api_prefix, tags=self._api_tags)
+        self._system_app.app.include_router(
+            router, prefix=self._api_prefix, tags=self._api_tags
+        )
         self._app_has_initiated = True
 
     def on_init(self):
         from . import models as _  # noqa: F401
 
     def _ensure_governance_tables(self, db_manager: DatabaseManager) -> None:
-        from dbgpt_serve.governance.models import (
-            GovernanceAccessRequestEntity,
-            GovernanceApiKeyEntity,
-            GovernanceAuditLogEntity,
-            GovernanceCatalogProductEntity,
-            GovernanceDatasourcePolicyEntity,
-            GovernanceMaskRuleEntity,
-            GovernanceRoleGrantEntity,
+        required_tables = (
+            "governance_datasource_policy",
+            "governance_role_grant",
+            "governance_mask_rule",
+            "governance_catalog_product",
+            "governance_access_request",
+            "governance_api_key",
+            "governance_audit_log",
         )
-
-        entities = (
-            GovernanceDatasourcePolicyEntity,
-            GovernanceRoleGrantEntity,
-            GovernanceMaskRuleEntity,
-            GovernanceCatalogProductEntity,
-            GovernanceAccessRequestEntity,
-            GovernanceApiKeyEntity,
-            GovernanceAuditLogEntity,
-        )
-        for entity in entities:
-            entity.__table__.create(bind=db_manager.engine, checkfirst=True)
+        inspector = inspect(db_manager.engine)
+        missing_tables = [
+            table_name
+            for table_name in required_tables
+            if not inspector.has_table(table_name)
+        ]
+        if missing_tables:
+            raise RuntimeError(
+                "Governance metadata schema is not ready. Run Alembic migrations "
+                f"before startup. Missing tables: {', '.join(missing_tables)}"
+            )
         logger.info("Governance metadata tables are ready.")
 
     def before_start(self):

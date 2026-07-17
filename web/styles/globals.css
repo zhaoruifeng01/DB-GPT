@@ -7,37 +7,34 @@
 
 body {
   margin: 0;
-  font-family: var(--joy-fontFamily-body, var(--joy-Josefin Sans, sans-serif));
-  line-height: var(--joy-lineHeight-md, 1.5);
-  --antd-primary-color: #0069fe;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   -webkit-appearance: none;
 }
 
 .light {
-  color: #333;
-  background-color: #f7f7f7;
+  color: var(--text-primary, #111827);
+  background-color: var(--surface-base, #f7f7f7);
 }
 
 .dark {
-  color: #f7f7f7;
-  background-color: #151622;
+  color: var(--text-inverse, #f7f7f7);
+  background-color: var(--surface-dark-base, #151622);
 }
 
 .dark-sub-bg {
   background-color: rgb(35, 38, 44);
 }
 
+/* Ant Design pagination customization - using CSS variables */
 .ant-btn-primary {
-  background-color: var(--antd-primary-color);
+  background-color: var(--antd-primary-color, #0069fe);
 }
 
-.ant-pagination .ant-pagination-prev * {
-  color: var(--antd-primary-color) !important;
-}
-
+.ant-pagination .ant-pagination-prev *,
 .ant-pagination .ant-pagination-next * {
-  color: var(--antd-primary-color) !important;
+  color: var(--antd-primary-color, #0069fe) !important;
 }
 
 .ant-pagination .ant-pagination-item a {
@@ -45,7 +42,7 @@ body {
 }
 
 .ant-pagination .ant-pagination-item.ant-pagination-item-active {
-  background-color: var(--antd-primary-color) !important;
+  background-color: var(--antd-primary-color, #0069fe) !important;
 }
 
 .ant-pagination .ant-pagination-item.ant-pagination-item-active a {
@@ -74,13 +71,13 @@ body {
   background: #555;
 }
 
-
-
-.dark :where(.css-dev-only-do-not-override-18iikkb).ant-tabs .ant-tabs-tab-btn {
+/* Dark mode Ant Tabs - use semantic classes instead of hash selectors */
+.dark .ant-tabs .ant-tabs-tab-btn {
   color: white;
 }
 
-:where(.css-dev-only-do-not-override-18iikkb).ant-form-item .ant-form-item-label>label {
+/* Form item label height - use component API instead */
+.ant-form-item .ant-form-item-label > label {
   height: 36px;
 }
 
@@ -170,7 +167,7 @@ pre {
     right: 1rem !important;
     gap: 0.5rem;
   }
-  
+
   .float-button-container button {
     width: 2.25rem !important;
     height: 2.25rem !important;
@@ -182,7 +179,7 @@ pre {
     right: 1.5rem !important;
     gap: 0.5rem;
   }
-  
+
   .float-button-container button {
     width: 2.5rem !important;
     height: 2.5rem !important;
@@ -199,6 +196,6 @@ table {
   height: inherit;
 }
 
-.rc-md-editor .editor-container>.section {
+.rc-md-editor .editor-container > .section {
   border-right: none !important;
 }

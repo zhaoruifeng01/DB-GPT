@@ -1,5 +1,5 @@
 import { ChartData } from '@/types/chat';
-import { Table } from '@mui/joy';
+import { Table } from 'antd';
 import { useMemo } from 'react';
 
 interface TableChartProps {
@@ -72,34 +72,31 @@ export default function TableChart({ chart, columnNameMap, renderCell }: TableCh
     return String(value);
   };
 
+  // Build Ant Design Table columns
+  const tableColumns = useMemo(() => {
+    return columns.map(col => ({
+      title: formatCol(col),
+      dataIndex: col,
+      key: col,
+      render: (value: any, _record: any) => {
+        return renderCell ? renderCell(value, record, col) : formatCellValue(value);
+      },
+    }));
+  }, [columns, columnNameMap, renderCell]);
+
   return (
     <div className='flex-1 min-w-0 p-4 bg-white dark:bg-theme-dark-container rounded'>
       <div className='h-full'>
         <div className='mb-2'>{chart.chart_name}</div>
         <div className='opacity-80 text-sm mb-2'>{chart.chart_desc}</div>
         <div className='flex-1 overflow-auto'>
-          <Table aria-label='dashboard table' stripe='odd' hoverRow borderAxis='bothBetween'>
-            <thead>
-              <tr>
-                {columns.map(col => (
-                  <th key={col}>{formatCol(col)}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dataSource.map((row, i) => (
-                <tr key={i}>
-                  {columns.map(col => (
-                    <td key={col}>
-                      {renderCell
-                        ? renderCell(row[col as keyof typeof row], row, col)
-                        : formatCellValue(row[col as keyof typeof row])}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <Table
+            dataSource={dataSource}
+            columns={tableColumns}
+            pagination={false}
+            size='small'
+            rowKey={(record, index) => index?.toString() || '0'}
+          />
         </div>
       </div>
     </div>

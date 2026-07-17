@@ -13,7 +13,9 @@ from dbgpt_serve.governance.service import GovernanceService, Principal
 @pytest.fixture
 def service(tmp_path):
     # Importing the models above registers them on DB-GPT's shared metadata base.
-    db = DatabaseManager.build_from(f"sqlite:///{tmp_path / 'governance.db'}", base=Model)
+    db = DatabaseManager.build_from(
+        f"sqlite:///{tmp_path / 'governance.db'}", base=Model
+    )
     db.create_all()
     with db.session() as session:
         session.add(
@@ -76,10 +78,56 @@ def test_read_only_sql_guard_rejects_writes_and_extracts_tables():
         "orders",
         "customers",
     }
+    assert service_tables("WITH recent AS (SELECT * FROM orders) SELECT * FROM recent")
     with pytest.raises(HTTPException, match="read-only"):
         service_tables("DELETE FROM orders")
     with pytest.raises(HTTPException, match="one read-only"):
         service_tables("SELECT 1; SELECT 2")
+
+
+def test_sql_guard_rejects_complex_or_ambiguous_input():
+    from dbgpt_serve.governance.sql_guard import SqlGuard, SqlGuardConfig
+
+    with pytest.raises(HTTPException, match="length"):
+        SqlGuard(SqlGuardConfig(max_length=20)).validate(
+            "SELECT * FROM very_long_table_name"
+        )
+    with pytest.raises(HTTPException, match="token"):
+        SqlGuard(SqlGuardConfig(max_tokens=8)).validate(
+            "SELECT a, b, c, d, e, f FROM t"
+        )
+    with pytest.raises(HTTPException, match="nesting"):
+        SqlGuard(SqlGuardConfig(max_nesting_depth=0)).validate(
+            "SELECT * FROM t WHERE id IN (SELECT id FROM x)"
+        )
+
+
+def test_audit_sanitizes_sql_and_details(service, admin):
+    service.audit(
+        admin,
+        "query",
+        1,
+        "failed",
+        sql_text="SELECT * FROM users WHERE password = 'plain' AND id = 42",
+        detail="dsn=mysql://root:secret@localhost/db token=abc123",
+    )
+
+    with service.db_manager.session() as session:
+        entry = session.query(service_models().GovernanceAuditLogEntity).first()
+        sql_text = entry.sql_text
+        detail = entry.detail
+
+    assert "plain" not in sql_text
+    assert sql_text.startswith("sha256:")
+    assert "password = ? AND id = ?" in sql_text
+    assert "secret" not in detail
+    assert "abc123" not in detail
+
+
+def service_models():
+    from dbgpt_serve.governance import models
+
+    return models
 
 
 def service_tables(sql):

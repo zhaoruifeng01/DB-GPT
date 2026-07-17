@@ -79,6 +79,7 @@ class Serve(BaseServe):
         config = self._config or ServeConfig.from_app_config(
             self._system_app.config, SERVE_CONFIG_KEY_PREFIX
         )
+        config.validate_security()
         self._service = PermissionService(self._db_manager, config)
 
         # Set service in endpoints module

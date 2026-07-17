@@ -1,5 +1,5 @@
 import { ChartData } from '@/types/chat';
-import { Card, CardContent, Typography } from '@mui/joy';
+import { Card } from 'antd';
 import { useMemo } from 'react';
 import BarChart from './bar-chart';
 import LineChart from './line-chart';
@@ -51,13 +51,11 @@ function Chart({ chartsData }: Props) {
                 <div key={chart.chart_uid} className='flex flex-row gap-3'>
                   {chart.values.map(item => (
                     <div key={item.name} className='flex-1'>
-                      <Card sx={{ background: 'transparent' }}>
-                        <CardContent className='justify-around'>
-                          <Typography gutterBottom component='div'>
-                            {item.name}
-                          </Typography>
-                          <Typography>{item.value}</Typography>
-                        </CardContent>
+                      <Card className='bg-transparent border-0'>
+                        <div className='flex flex-col justify-around p-4'>
+                          <div className='text-base mb-2'>{item.name}</div>
+                          <div className='text-lg'>{item.value}</div>
+                        </div>
                       </Card>
                     </div>
                   ))}

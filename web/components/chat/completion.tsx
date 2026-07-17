@@ -4,9 +4,8 @@ import useSummary from '@/hooks/use-summary';
 import { FeedBack, IChatDialogueMessageSchema } from '@/types/chat';
 import { STORAGE_INIT_MESSAGE_KET, getInitMessage } from '@/utils';
 import { CopyOutlined, RedoOutlined } from '@ant-design/icons';
-import { Button, IconButton } from '@mui/joy';
 import { useAsyncEffect } from 'ahooks';
-import { Modal, Tooltip, message } from 'antd';
+import { Button, Modal, Tooltip, message } from 'antd';
 import classNames from 'classnames';
 import copy from 'copy-to-clipboard';
 import { cloneDeep } from 'lodash';
@@ -374,13 +373,8 @@ const Completion = ({ messages, onSubmit, onFormatContent }: Props) => {
                     {content.role === 'view' && (
                       <div className='flex w-full border-t border-gray-200 dark:border-theme-dark'>
                         {scene === 'chat_knowledge' && content.retry ? (
-                          <Button
-                            onClick={handleRetry}
-                            slots={{ root: IconButton }}
-                            slotProps={{ root: { variant: 'plain', color: 'primary' } }}
-                          >
-                            <RedoOutlined />
-                            &nbsp;<span className='text-sm'>{t('Retry')}</span>
+                          <Button type='text' onClick={handleRetry} icon={<RedoOutlined />}>
+                            <span className='text-sm'>{t('Retry')}</span>
                           </Button>
                         ) : null}
                         <div className='flex w-full flex-row-reverse'>
@@ -394,13 +388,11 @@ const Completion = ({ messages, onSubmit, onFormatContent }: Props) => {
                           />
                           <Tooltip title={t('Copy_Btn')}>
                             <Button
+                              type='text'
                               onClick={() => onCopyContext(content?.context)}
-                              slots={{ root: IconButton }}
-                              slotProps={{ root: { variant: 'plain', color: 'primary' } }}
-                              sx={{ borderRadius: 40 }}
-                            >
-                              <CopyOutlined />
-                            </Button>
+                              icon={<CopyOutlined />}
+                              className='rounded-full'
+                            />
                           </Tooltip>
                         </div>
                       </div>

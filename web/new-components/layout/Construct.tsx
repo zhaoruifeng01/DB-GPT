@@ -1,3 +1,4 @@
+import { ChatContext } from '@/app/chat-context';
 import { ModelSvg } from '@/components/icons';
 import { STORAGE_USERINFO_KEY } from '@/utils/constants/index';
 import Icon, {
@@ -13,12 +14,14 @@ import Icon, {
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import { ConfigProvider, Tabs } from 'antd';
+import classNames from 'classnames';
 import { t } from 'i18next';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import './style.css';
 
 function ConstructLayout({ children, className }: { children: React.ReactNode; className?: string }) {
+  const { mode } = useContext(ChatContext);
   const [userRole, setUserRole] = useState<string>('normal');
   const items = [
     {
@@ -127,12 +130,13 @@ function ConstructLayout({ children, className }: { children: React.ReactNode; c
   }, []);
 
   return (
-    <div className='flex flex-col h-full w-full  dark:bg-gradient-dark bg-gradient-light bg-cover bg-center'>
+    <div className='flex flex-col h-full w-full dark:bg-gradient-dark bg-gradient-light bg-cover bg-center'>
       <ConfigProvider
         theme={{
           components: {
-            Button: {
-              // defaultBorderColor: 'white',
+            Tabs: {
+              // Use semantic tokens instead of direct overrides
+              colorBorderSecondary: mode === 'dark' ? '#6f7f95' : undefined,
             },
             Segmented: {
               itemSelectedBg: '#2867f5',
@@ -142,14 +146,7 @@ function ConstructLayout({ children, className }: { children: React.ReactNode; c
         }}
       >
         <Tabs
-          className={className}
-          // tabBarStyle={{
-          //   background: '#edf8fb',
-          //   border: 'none',
-          //   height: '3.5rem',
-          //   padding: '0 1.5rem',
-          //   color: !isDarkMode ? 'white' : 'black',
-          // }}
+          className={classNames('construct-tabs', mode === 'dark' && 'tabs-dark')}
           activeKey={activeKey}
           items={items.map(items => {
             return {
@@ -162,15 +159,6 @@ function ConstructLayout({ children, className }: { children: React.ReactNode; c
           onTabClick={key => {
             router.push(`/construct/${key}`);
           }}
-          // tabBarExtraContent={
-          //   <Button
-          //     className='border-none text-white bg-button-gradient h-full flex items-center'
-          //     icon={<PlusOutlined className='text-base' />}
-          //     // onClick={handleCreate}
-          //   >
-          //     {t('create_app')}
-          //   </Button>
-          // }
         />
       </ConfigProvider>
     </div>

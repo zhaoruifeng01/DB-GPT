@@ -1141,7 +1141,7 @@ const ManusLeftPanel: React.FC<ManusLeftPanelProps> = ({
             <TaskPlanCard
               tasks={taskPlan}
               defaultCollapsed={false}
-              onTaskClick={(taskIndex) => {
+              onTaskClick={taskIndex => {
                 // Map task plan index to execution step ID
                 const allSteps = sections.flatMap(s => s.steps);
                 if (taskIndex < allSteps.length) {

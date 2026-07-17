@@ -1,5 +1,6 @@
 import { ChatContext, ChatContextProvider } from '@/app/chat-context';
 import SideBar from '@/components/layout/side-bar';
+import { antdTokens } from '@/design-tokens/colors';
 import FloatHelper from '@/new-components/layout/FloatHelper';
 import { STORAGE_LANG_KEY, STORAGE_TOKEN_KEY, STORAGE_USERINFO_KEY } from '@/utils/constants/index';
 import { App, ConfigProvider, MappingAlgorithm, theme } from 'antd';
@@ -14,14 +15,11 @@ import { useTranslation } from 'react-i18next';
 import '../app/i18n';
 import '../nprogress.css';
 import '../styles/globals.css';
-// import TopProgressBar from '@/components/layout/top-progress-bar';
 
 const antdDarkTheme: MappingAlgorithm = (seedToken, mapToken) => {
   return {
     ...theme.darkAlgorithm(seedToken, mapToken),
-    colorBgBase: '#232734',
-    colorBorder: '#828282',
-    colorBgContainer: '#232734',
+    ...antdTokens.dark,
   };
 };
 
@@ -112,10 +110,7 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
     <ConfigProvider
       locale={i18n.language === 'en' ? enUS : zhCN}
       theme={{
-        token: {
-          colorPrimary: '#0C75FC',
-          borderRadius: 4,
-        },
+        token: antdTokens.light,
         algorithm: mode === 'dark' ? antdDarkTheme : undefined,
       }}
     >

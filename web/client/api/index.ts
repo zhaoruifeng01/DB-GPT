@@ -52,8 +52,8 @@ ins.interceptors.request.use(request => {
 });
 
 ins.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     if (error.response?.status === 401) {
       localStorage.removeItem(STORAGE_TOKEN_KEY);
       localStorage.removeItem(STORAGE_USERINFO_KEY);
@@ -62,7 +62,7 @@ ins.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export const GET = <Params = any, Response = any, D = any>(
@@ -102,8 +102,8 @@ export * from './chat';
 export * from './evaluate';
 export * from './flow';
 export * from './knowledge';
+export * from './permission';
 export * from './prompt';
 export * from './request';
-export * from './permission';
 export * from './tools';
 export * from './user';

@@ -2,27 +2,12 @@ import { ChatContext } from '@/app/chat-context';
 import { apiInterceptors, getChatFeedBackItme, postChatFeedBackForm } from '@/client/api';
 import { FeedBack } from '@/types/chat';
 import { ChatFeedBackSchema } from '@/types/db';
-import { CloseRounded, MoreHoriz } from '@mui/icons-material';
-import {
-  Box,
-  Button,
-  Dropdown,
-  Grid,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  Option,
-  Select,
-  Sheet,
-  Slider,
-  Textarea,
-  Typography,
-  styled,
-} from '@mui/joy';
-import { Tooltip, message } from 'antd';
-import { useCallback, useContext, useRef, useState } from 'react';
+import { EllipsisOutlined } from '@ant-design/icons';
+import { Button, Card, Input, Popover, Select, Slider, Space, Tooltip, message } from 'antd';
+import { useCallback, useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+const { TextArea } = Input;
 
 type Props = {
   conv_index: number;
@@ -37,12 +22,12 @@ const ChatFeedback = ({ conv_index, question, knowledge_space, select_param }: P
   const [ques_type, setQuesType] = useState('');
   const [score, setScore] = useState(4);
   const [text, setText] = useState('');
-  const action = useRef(null);
+  const [open, setOpen] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
   const handleOpenChange = useCallback(
-    (_: any, isOpen: boolean) => {
-      if (isOpen) {
+    (newOpen: boolean) => {
+      if (newOpen) {
         apiInterceptors(getChatFeedBackItme(chatId, conv_index))
           .then(res => {
             const finddata = res[1] ?? {};
@@ -58,41 +43,21 @@ const ChatFeedback = ({ conv_index, question, knowledge_space, select_param }: P
         setScore(4);
         setText('');
       }
+      setOpen(newOpen);
     },
     [chatId, conv_index],
   );
 
-  const marks = [
-    { value: 0, label: '0' },
-    { value: 1, label: '1' },
-    { value: 2, label: '2' },
-    { value: 3, label: '3' },
-    { value: 4, label: '4' },
-    { value: 5, label: '5' },
-  ];
-  function valueText(value: number) {
-    return {
-      0: t('Lowest'),
-      1: t('Missed'),
-      2: t('Lost'),
-      3: t('Incorrect'),
-      4: t('Verbose'),
-      5: t('Best'),
-    }[value];
-  }
-  const Item = styled(Sheet)(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#FBFCFD' : '#0E0E10',
-    ...theme.typography['body-sm'],
-    padding: theme.spacing(1),
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 4,
-    width: '100%',
-    height: '100%',
-  }));
-  const handleSubmit = (event: any) => {
-    event.preventDefault();
+  const marks: Record<number, string> = {
+    0: t('Lowest'),
+    1: t('Missed'),
+    2: t('Lost'),
+    3: t('Incorrect'),
+    4: t('Verbose'),
+    5: t('Best'),
+  };
+
+  const handleSubmit = () => {
     const formData: ChatFeedBackSchema = {
       conv_uid: chatId,
       conv_index: conv_index,
@@ -108,133 +73,85 @@ const ChatFeedback = ({ conv_index, question, knowledge_space, select_param }: P
         data: formData,
       }),
     )
-      .then(_ => {
+      .then(() => {
         messageApi.open({ type: 'success', content: 'save success' });
+        setOpen(false);
       })
-      .catch(_ => {
+      .catch(() => {
         messageApi.open({ type: 'error', content: 'save error' });
       });
   };
-  return (
-    <Dropdown onOpenChange={handleOpenChange}>
+
+  const selectOptions = select_param
+    ? Object.keys(select_param).map(key => ({ value: key, label: select_param[key] }))
+    : [];
+
+  const content = (
+    <Card size='small' className='w-[350px]' bordered={false}>
       {contextHolder}
+      <Space direction='vertical' className='w-full' size='middle'>
+        <div className='grid grid-cols-13 gap-2'>
+          <div className='col-span-3 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded px-2 py-3 text-sm'>
+            {t('Q_A_Category')}
+          </div>
+          <div className='col-span-10'>
+            <Select
+              value={ques_type || undefined}
+              placeholder='Choose one...'
+              onChange={value => setQuesType(value || '')}
+              options={selectOptions}
+              className='w-full'
+              allowClear
+              onClear={() => setQuesType('')}
+            />
+          </div>
+
+          <div className='col-span-3 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded px-2 py-3 text-sm'>
+            <Tooltip title={t('feed_back_desc')} placement='left'>
+              {t('Q_A_Rating')}
+            </Tooltip>
+          </div>
+          <div className='col-span-10 px-4 py-2'>
+            <Slider
+              min={0}
+              max={5}
+              step={1}
+              value={score}
+              onChange={value => setScore(value)}
+              marks={marks}
+              tooltip={{ formatter: value => (value !== undefined ? marks[value] : '') }}
+            />
+          </div>
+
+          <div className='col-span-13'>
+            <TextArea
+              placeholder={t('Please_input_the_text')}
+              value={text}
+              onChange={e => setText(e.target.value)}
+              rows={3}
+              className='w-full'
+              showCount
+              maxLength={500}
+            />
+          </div>
+
+          <div className='col-span-13'>
+            <Button type='primary' onClick={handleSubmit} className='w-full'>
+              {t('submit')}
+            </Button>
+          </div>
+        </div>
+      </Space>
+    </Card>
+  );
+
+  return (
+    <Popover content={content} open={open} onOpenChange={handleOpenChange} trigger='click' placement='bottomRight'>
       <Tooltip title={t('Rating')}>
-        <MenuButton
-          slots={{ root: IconButton }}
-          slotProps={{ root: { variant: 'plain', color: 'primary' } }}
-          sx={{ borderRadius: 40 }}
-        >
-          <MoreHoriz />
-        </MenuButton>
+        <Button type='text' icon={<EllipsisOutlined />} className='rounded-full' />
       </Tooltip>
-      <Menu>
-        <MenuItem disabled sx={{ minHeight: 0 }} />
-        <Box
-          sx={{
-            width: '100%',
-            maxWidth: 350,
-            display: 'grid',
-            gap: 3,
-            padding: 1,
-          }}
-        >
-          <form onSubmit={handleSubmit}>
-            <Grid container spacing={0.5} columns={13} sx={{ flexGrow: 1 }}>
-              <Grid xs={3}>
-                <Item>{t('Q_A_Category')}</Item>
-              </Grid>
-              <Grid xs={10}>
-                <Select
-                  action={action}
-                  value={ques_type}
-                  placeholder='Choose one…'
-                  onChange={(_, newValue) => setQuesType(newValue ?? '')}
-                  {...(ques_type && {
-                    // display the button and remove select indicator
-                    // when user has selected a value
-                    endDecorator: (
-                      <IconButton
-                        size='sm'
-                        variant='plain'
-                        color='neutral'
-                        onMouseDown={event => {
-                          // don't open the popup when clicking on this button
-                          event.stopPropagation();
-                        }}
-                        onClick={() => {
-                          setQuesType('');
-                          action.current?.focusVisible();
-                        }}
-                      >
-                        <CloseRounded />
-                      </IconButton>
-                    ),
-                    indicator: null,
-                  })}
-                  sx={{ width: '100%' }}
-                >
-                  {select_param &&
-                    Object.keys(select_param)?.map(paramItem => (
-                      <Option key={paramItem} value={paramItem}>
-                        {select_param[paramItem]}
-                      </Option>
-                    ))}
-                </Select>
-              </Grid>
-              <Grid xs={3}>
-                <Item>
-                  <Tooltip
-                    title={
-                      <Box>
-                        <div>{t('feed_back_desc')}</div>
-                      </Box>
-                    }
-                    variant='solid'
-                    placement='left'
-                  >
-                    {t('Q_A_Rating')}
-                  </Tooltip>
-                </Item>
-              </Grid>
-              <Grid xs={10} sx={{ pl: 0, ml: 0 }}>
-                <Slider
-                  aria-label='Custom'
-                  step={1}
-                  min={0}
-                  max={5}
-                  valueLabelFormat={valueText}
-                  valueLabelDisplay='on'
-                  marks={marks}
-                  sx={{ width: '90%', pt: 3, m: 2, ml: 1 }}
-                  onChange={event => setScore(event.target?.value)}
-                  value={score}
-                />
-              </Grid>
-              <Grid xs={13}>
-                <Textarea
-                  placeholder={t('Please_input_the_text')}
-                  value={text}
-                  onChange={event => setText(event.target.value)}
-                  minRows={2}
-                  maxRows={4}
-                  endDecorator={
-                    <Typography level='body-xs' sx={{ ml: 'auto' }}>
-                      {t('input_count') + text.length + t('input_unit')}
-                    </Typography>
-                  }
-                  sx={{ width: '100%', fontSize: 14 }}
-                />
-              </Grid>
-              <Grid xs={13}>
-                <Button type='submit' variant='outlined' sx={{ width: '100%', height: '100%' }}>
-                  {t('submit')}
-                </Button>
-              </Grid>
-            </Grid>
-          </form>
-        </Box>
-      </Menu>
-    </Dropdown>
+    </Popover>
   );
 };
+
 export default ChatFeedback;

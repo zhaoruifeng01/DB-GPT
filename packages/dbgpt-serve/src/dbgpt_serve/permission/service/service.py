@@ -21,7 +21,7 @@ from ..api.schemas import (
     UserResponse,
     UserUpdateRequest,
 )
-from ..config import ServeConfig
+from ..config import DEFAULT_JWT_SECRET_KEY, ServeConfig, is_production_environment
 from ..models.models import (
     SysDeptEntity,
     SysRoleEntity,
@@ -159,8 +159,13 @@ class PermissionService:
 
     @staticmethod
     def verify_token_static(token: str) -> Optional[dict]:
-        """Verify JWT token without needing service instance (for auth.py integration)"""
-        secret_key = os.environ.get("DBGPT_JWT_SECRET_KEY", "dbgpt-secret-key-for-hs256-signing!")
+        """Verify JWT token without needing a service instance.
+
+        Used by auth.py integration.
+        """
+        secret_key = os.environ.get("DBGPT_JWT_SECRET_KEY", DEFAULT_JWT_SECRET_KEY)
+        if is_production_environment() and secret_key == DEFAULT_JWT_SECRET_KEY:
+            return None
         try:
             import jwt
 
@@ -394,11 +399,7 @@ class PermissionService:
     def list_roles(self) -> List[RoleResponse]:
         """List all roles"""
         with self._db_manager.session() as session:
-            roles = (
-                session.query(SysRoleEntity)
-                .filter(SysRoleEntity.status == 1)
-                .all()
-            )
+            roles = session.query(SysRoleEntity).filter(SysRoleEntity.status == 1).all()
             return [
                 RoleResponse(
                     id=r.id,
@@ -413,7 +414,9 @@ class PermissionService:
     def update_role(self, role_id: int, request: RoleRequest) -> Optional[RoleResponse]:
         """Update a role"""
         with self._db_manager.session() as session:
-            role = session.query(SysRoleEntity).filter(SysRoleEntity.id == role_id).first()
+            role = (
+                session.query(SysRoleEntity).filter(SysRoleEntity.id == role_id).first()
+            )
             if not role:
                 return None
             role.role_code = request.role_code
@@ -432,7 +435,9 @@ class PermissionService:
     def delete_role(self, role_id: int) -> bool:
         """Delete a role (set status to 0)"""
         with self._db_manager.session() as session:
-            role = session.query(SysRoleEntity).filter(SysRoleEntity.id == role_id).first()
+            role = (
+                session.query(SysRoleEntity).filter(SysRoleEntity.id == role_id).first()
+            )
             if not role:
                 return False
             role.status = 0
@@ -478,7 +483,9 @@ class PermissionService:
     def update_dept(self, dept_id: int, request: DeptRequest) -> Optional[DeptResponse]:
         """Update a department"""
         with self._db_manager.session() as session:
-            dept = session.query(SysDeptEntity).filter(SysDeptEntity.id == dept_id).first()
+            dept = (
+                session.query(SysDeptEntity).filter(SysDeptEntity.id == dept_id).first()
+            )
             if not dept:
                 return None
             dept.dept_name = request.dept_name
@@ -498,7 +505,9 @@ class PermissionService:
     def delete_dept(self, dept_id: int) -> bool:
         """Delete a department (set status to 0)"""
         with self._db_manager.session() as session:
-            dept = session.query(SysDeptEntity).filter(SysDeptEntity.id == dept_id).first()
+            dept = (
+                session.query(SysDeptEntity).filter(SysDeptEntity.id == dept_id).first()
+            )
             if not dept:
                 return False
             dept.status = 0
@@ -602,7 +611,10 @@ class PermissionService:
                         )
                         .first()
                     )
-                    if admin_user and admin_user.password_hash == "PLACEHOLDER_WILL_BE_SET_BY_APP":
+                    if (
+                        admin_user
+                        and admin_user.password_hash == "PLACEHOLDER_WILL_BE_SET_BY_APP"
+                    ):
                         admin_user.password_hash = self.hash_password("admin123")
                         logger.info("Admin user placeholder password has been replaced")
 
@@ -736,11 +748,8 @@ class PermissionService:
         roles: List[RoleResponse],
         departments: List[DeptResponse],
     ) -> UserResponse:
-
         gmt_created_str = (
-            user.gmt_created.strftime("%Y-%m-%d %H:%M:%S")
-            if user.gmt_created
-            else None
+            user.gmt_created.strftime("%Y-%m-%d %H:%M:%S") if user.gmt_created else None
         )
         return UserResponse(
             id=user.id,

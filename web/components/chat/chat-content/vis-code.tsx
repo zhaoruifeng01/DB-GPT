@@ -1,5 +1,5 @@
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { GPTVis } from '@antv/gpt-vis';
-import { CheckOutlined, CloseOutlined } from '@mui/icons-material';
 import classNames from 'classnames';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';

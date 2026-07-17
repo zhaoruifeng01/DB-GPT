@@ -35,7 +35,12 @@ const statusIcon = (status: string) => {
   }
 };
 
-const TaskPlanCard: React.FC<TaskPlanCardProps> = ({ tasks, defaultCollapsed = true, embedded = false, onTaskClick }) => {
+const TaskPlanCard: React.FC<TaskPlanCardProps> = ({
+  tasks,
+  defaultCollapsed = true,
+  embedded = false,
+  onTaskClick,
+}) => {
   const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
