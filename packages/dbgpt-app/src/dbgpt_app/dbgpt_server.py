@@ -114,10 +114,20 @@ def mount_routers(app: FastAPI):
 
 def mount_static_files(app: FastAPI, param: ApplicationConfig):
     package_dir = os.path.dirname(os.path.abspath(__file__))
-    if param.service.web.new_web_ui:
+    ui_mode = os.getenv("DBGPT_WEB_UI_MODE")
+    if ui_mode not in {None, "legacy", "shell"}:
+        raise ValueError("DBGPT_WEB_UI_MODE must be either 'legacy' or 'shell'")
+
+    if ui_mode == "shell" or (ui_mode is None and param.service.web.new_web_ui):
         static_file_path = os.path.join(package_dir, "static", "web")
     else:
-        static_file_path = os.path.join(package_dir, "static", "old_web")
+        rebuilt_legacy_path = os.path.join(package_dir, "static", "legacy_web")
+        bundled_legacy_path = os.path.join(package_dir, "static", "old_web")
+        static_file_path = (
+            rebuilt_legacy_path
+            if os.path.isfile(os.path.join(rebuilt_legacy_path, "index.html"))
+            else bundled_legacy_path
+        )
 
     os.makedirs(STATIC_MESSAGE_IMG_PATH, exist_ok=True)
     app.mount(

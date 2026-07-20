@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # ============================================================
-# dbgpt-start: 生产模式启动（增量 shell 前端构建 + 依赖缓存）
+# dbgpt-start: 在旧版 Next.js UI 与迁移中的 shell 之间安全切换
 #
 # 安装: cp scripts/dbgpt-start.sh ~/.local/bin/dbgpt-start && chmod +x ~/.local/bin/dbgpt-start
 # ============================================================
@@ -17,7 +17,6 @@ fi
 
 # ── 2. 端口清理 ──
 BACKEND_PORT="${DBGPT_PORT:-5670}"
-FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 
 kill_port() {
   local port=$1
@@ -35,102 +34,41 @@ kill_port() {
   fi
 }
 kill_port "$BACKEND_PORT"
-kill_port "$FRONTEND_PORT"
 
-# ── 3. 增量前端构建 ──
-STATIC_DIR="packages/dbgpt-app/src/dbgpt_app/static/web"
-SRC_MARKER="$STATIC_DIR/.src_ts"        # 源码最新 mtime
-DEP_MARKER="$STATIC_DIR/.dep_hash"      # 依赖清单 hash
-SHELL_DIR="web/shell"
-SHELL_BUILD_DIR="$SHELL_DIR/build/client"
+# ── 3. 选择前端（只读现有产物，不构建、不复制、不删除） ──
+CONFIG_FILE="configs/dbgpt-proxy-openai.toml"
+UI_MODE="${DBGPT_WEB_UI_MODE:-legacy}"
+LEGACY_WEB_DIR="packages/dbgpt-app/src/dbgpt_app/static/legacy_web"
+SHELL_WEB_DIR="packages/dbgpt-app/src/dbgpt_app/static/web"
 
-t0=$SECONDS
-
-# 3a. 扫描 shell 产物会读取的源码和配置，排除构建输出与依赖目录
-newest_src=$(find web -type f \
-  \( -name '*.tsx' -o -name '*.ts' -o -name '*.jsx' -o -name '*.js' \
-     -o -name '*.css' -o -name '*.scss' -o -name '*.less' -o -name '*.html' \) \
-  ! -path '*/node_modules/*' ! -path '*/.next/*' ! -path '*/out/*' \
-  ! -path '*/shell/build/*' ! -path '*/shell/.react-router/*' \
-  ! -path '*/locales/*' \
-  -exec stat -f '%m' {} + 2>/dev/null | sort -rn | head -1)
-
-# 特殊：shell 构建配置也要看
-newest_cfg=$(stat -f '%m' \
-  web/shell/package.json web/shell/vite.config.ts web/shell/react-router.config.ts \
-  web/shell/tailwind.config.ts web/shell/postcss.config.js \
-  web/shared/package.json web/shared/src/index.ts 2>/dev/null | sort -rn | head -1)
-
-newest=$(echo -e "${newest_src:-0}\n${newest_cfg:-0}" | sort -rn | head -1)
-
-last_src=0
-[[ -f "$SRC_MARKER" ]] && last_src=$(cat "$SRC_MARKER")
-
-need_build=false
-if [[ ! -f "$STATIC_DIR/index.html" || ! -d "$STATIC_DIR/assets" ]]; then
-  print "🔨 Shell static output missing → full build"
-  need_build=true
-elif [[ "$newest" -gt "$last_src" ]]; then
-  print "🔨 Source changed since last build"
-  # Only try to list changed files if the marker actually exists;
-  # `find -newer` on a missing file errors and would abort under `set -e`.
-  if [[ -f "$SRC_MARKER" ]]; then
-    changed=$(find web -type f \
-      \( -name '*.tsx' -o -name '*.ts' -o -name '*.css' -o -name '*.scss' \) \
-      ! -path '*/node_modules/*' ! -path '*/.next/*' ! -path '*/out/*' \
-      ! -path '*/shell/build/*' ! -path '*/shell/.react-router/*' \
-      ! -path '*/locales/*' \
-      -newer "$SRC_MARKER" 2>/dev/null | head -5 || true)
-    if [[ -n "$changed" ]]; then
-      print "   → top changed files:"
-      print "$changed" | sed 's/^/     /'
+case "$UI_MODE" in
+  legacy)
+    if [[ ! -f "$LEGACY_WEB_DIR/index.html" || ! -d "$LEGACY_WEB_DIR/_next/static" ]]; then
+      print -u2 "✗ Legacy web UI assets are missing: $LEGACY_WEB_DIR"
+      exit 1
     fi
-  else
-    print "   → first run (no marker yet)"
-  fi
-  need_build=true
-fi
+    print "✓ UI mode: legacy ($LEGACY_WEB_DIR)"
+    ;;
+  shell)
+    if [[ ! -f "$SHELL_WEB_DIR/index.html" || ! -d "$SHELL_WEB_DIR/assets" ]]; then
+      print -u2 "✗ Shell web UI assets are missing: $SHELL_WEB_DIR"
+      exit 1
+    fi
+    print "✓ UI mode: shell ($SHELL_WEB_DIR)"
+    ;;
+  *)
+    print -u2 "✗ DBGPT_WEB_UI_MODE must be legacy or shell"
+    exit 1
+    ;;
+esac
 
-# 3b. 依赖变化检测（只有 package.json / lockfile 变了才重装）
-dep_hash=$(cat package.json pnpm-lock.yaml web/shell/package.json web/shared/package.json 2>/dev/null | shasum | awk '{print $1}')
-last_dep=""
-[[ -f "$DEP_MARKER" ]] && last_dep=$(cat "$DEP_MARKER")
-need_install=false
-if [[ ! -d "web/shell/node_modules" ]]; then
-  need_install=true
-elif [[ "$dep_hash" != "$last_dep" ]]; then
-  print "📦 Dependencies changed → pnpm install required"
-  need_install=true
-fi
-
-if $need_build; then
-  if $need_install; then
-    print "📦 pnpm install..."
-    pnpm install --filter @dbgpt/shell... 2>&1 | tail -6
-  else
-    print "✅ Dependencies unchanged, skipping install."
-  fi
-
-  print "🔨 react-router build..."
-  pnpm --dir "$SHELL_DIR" run build
-
-  rm -rf "$STATIC_DIR"
-  mkdir -p "$STATIC_DIR"
-  cp -R "$SHELL_BUILD_DIR"/. "$STATIC_DIR/"
-
-  # 记录本次构建捕获到的最新 mtime（避免 marker 时间戳漂移 bug）
-  echo "$newest" > "$SRC_MARKER"
-  echo "$dep_hash" > "$DEP_MARKER"
-  print "✓ Shell frontend rebuilt in $((SECONDS - t0))s."
-else
-  print "✅ Shell frontend unchanged, skipping build ($((SECONDS - t0))s check)."
-fi
+export DBGPT_WEB_UI_MODE="$UI_MODE"
 
 # ── 4. 启动后端 ──
 export DBGPT_AUTH_TYPE=db  # 启用数据库权限认证（v0.8.2+）
 export DBGPT_LOG_LEVEL=WARNING  # 只输出WARNING及以上级别日志
 print "🚀 启动 DB-GPT webserver on port ${BACKEND_PORT}..."
-exec .venv/bin/dbgpt start webserver --config configs/dbgpt-proxy-openai.toml
+exec .venv/bin/dbgpt start webserver --config "$CONFIG_FILE"
 # #!/usr/bin/env zsh
 # # ============================================================
 # # dbgpt-start: 生产模式启动（增量前端构建）
