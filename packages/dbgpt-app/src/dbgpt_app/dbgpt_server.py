@@ -7,10 +7,11 @@ from typing import List, Optional  # noqa: F401 - kept for potential external im
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 # fastapi import time cost about 0.05s
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from dbgpt._version import version
 from dbgpt.component import SystemApp
@@ -59,6 +60,20 @@ app = create_app(
 replace_router(app)
 
 system_app = SystemApp(app)
+
+
+class SPAStaticFiles(StaticFiles):
+    """Serve static files, falling back to index.html for client-side routes."""
+
+    async def get_response(self, path, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code == 404:
+                index_path = os.path.join(self.directory, "index.html")
+                if os.path.isfile(index_path):
+                    return FileResponse(index_path, media_type="text/html")
+            raise
 
 
 def mount_routers(app: FastAPI):
@@ -110,9 +125,13 @@ def mount_static_files(app: FastAPI, param: ApplicationConfig):
         StaticFiles(directory=STATIC_MESSAGE_IMG_PATH, html=True),
         name="static2",
     )
-    app.mount(
-        "/_next/static", StaticFiles(directory=static_file_path + "/_next/static")
-    )
+    next_static_path = os.path.join(static_file_path, "_next", "static")
+    if os.path.isdir(next_static_path):
+        app.mount("/_next/static", StaticFiles(directory=next_static_path))
+
+    vite_assets_path = os.path.join(static_file_path, "assets")
+    if os.path.isdir(vite_assets_path):
+        app.mount("/assets", StaticFiles(directory=vite_assets_path), name="assets")
 
     # The Yunshu-derived governance UI shares the DB-GPT origin and this same
     # FastAPI process. It must be mounted before the root static application.
@@ -130,18 +149,20 @@ def mount_static_files(app: FastAPI, param: ApplicationConfig):
     # Register explicit routes *before* the catch-all StaticFiles mount so that
     # /share/<any-token> is served correctly.
     from fastapi import HTTPException
-    from fastapi.responses import FileResponse
 
     share_html = os.path.join(static_file_path, "share", "[token]", "index.html")
+    index_html = os.path.join(static_file_path, "index.html")
 
     @app.get("/share/{token}")
     @app.get("/share/{token}/")
     async def _share_page_fallback(token: str):
         if os.path.isfile(share_html):
             return FileResponse(share_html, media_type="text/html")
+        if os.path.isfile(index_html):
+            return FileResponse(index_html, media_type="text/html")
         raise HTTPException(status_code=404, detail="Page not found")
 
-    app.mount("/", StaticFiles(directory=static_file_path, html=True), name="static")
+    app.mount("/", SPAStaticFiles(directory=static_file_path, html=True), name="static")
 
     app.mount(
         "/swagger_static",

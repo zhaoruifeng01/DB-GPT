@@ -7,8 +7,7 @@ import { defineConfig, loadEnv } from 'vite';
 const appDir = fileURLToPath(new URL('./app', import.meta.url));
 const webDir = fileURLToPath(new URL('..', import.meta.url));
 const designTokens = fileURLToPath(new URL('../design-tokens/index.ts', import.meta.url));
-const nextCompat = fileURLToPath(new URL('./app/lib/next-compat/', import.meta.url));
-const webPublicDir = fileURLToPath(new URL('./public/', import.meta.url));
+const webPublicDir = fileURLToPath(new URL('../public/', import.meta.url));
 
 // https://reactrouter.com/start/framework/installation
 export default defineConfig(({ mode }) => {
@@ -32,23 +31,15 @@ export default defineConfig(({ mode }) => {
         // design-tokens stay in web/design-tokens during the migration; shell
         // consumes them via this alias so we don't duplicate the token source.
         { find: '@/design-tokens', replacement: designTokens },
+        { find: '@/app/router-compat', replacement: `${appDir}/lib/router-compat.ts` },
+        { find: '@/app/image-compat', replacement: `${appDir}/lib/image-compat.tsx` },
+        { find: '@/app/dynamic-compat', replacement: `${appDir}/lib/dynamic-compat.tsx` },
         // During the strangler migration the shell reuses modules from the
         // legacy web/ tree (web/client/api, web/types, web/utils, web/hooks,
         // web/new-components, web/app/stores, web/app/chat-context, web/locales).
         // `@/` matches the legacy webpack alias so those modules import without
         // edits. Once the migration completes this alias goes away.
         { find: '@/', replacement: `${webDir}/` },
-        // Next.js shims: legacy chat modules under web/new-components/chat/** and
-        // web/components/chat/** import `next/navigation`, `next/router`,
-        // `next/image`, and `next/dynamic`. The shell is not a Next.js app, so
-        // these imports are routed to a compatibility layer under
-        // app/lib/next-compat/ that maps them onto react-router and <img>.
-        // The legacy Next.js app keeps resolving the real packages from its own
-        // node_modules - this alias only applies inside the shell build.
-        { find: 'next/navigation', replacement: `${nextCompat}navigation.ts` },
-        { find: 'next/router', replacement: `${nextCompat}router.ts` },
-        { find: 'next/image', replacement: `${nextCompat}image.tsx` },
-        { find: 'next/dynamic', replacement: `${nextCompat}dynamic.tsx` },
       ],
     },
     // Serve the legacy web/public/ assets (LOGO, icons, models, etc.) so that
@@ -63,6 +54,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5174,
+      watch: {
+        ignored: ['**/.next/**', '**/out/**', '**/build/**', '**/dist/**', '../../packages/dbgpt-app/src/dbgpt_app/static/web/**'],
+      },
       proxy: {
         // Dev-only: proxy /api to the FastAPI backend. In production, the shell
         // is served by the same Python process, so no proxy is needed.

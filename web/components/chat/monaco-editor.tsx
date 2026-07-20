@@ -5,8 +5,6 @@ import { useLatest } from 'ahooks';
 import classNames from 'classnames';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import { useContext, useMemo } from 'react';
-import { register } from './ob-editor/ob-plugin';
-import { getModelService } from './ob-editor/service';
 import { github, githubDark } from './ob-editor/theme';
 
 loader.config({ monaco });
@@ -54,12 +52,16 @@ export default function MonacoEditor({
   const context = useContext(ChatContext);
 
   async function pluginRegister(editor: monaco.editor.IStandaloneCodeEditor) {
+    if (language !== 'mysql') {
+      return;
+    }
+    const [{ register }, { getModelService }] = await Promise.all([import('./ob-editor/ob-plugin'), import('./ob-editor/service')]);
     const plugin = await register();
     plugin.setModelOptions(
       editor.getModel()?.id || '',
       getModelService(
         {
-          modelId: editor.getModel()?.id || '',
+          _modelId: editor.getModel()?.id || '',
           delimiter: ';',
         },
         () => sessionRef.current || null,

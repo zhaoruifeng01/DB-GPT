@@ -69,6 +69,11 @@ interface TopFormValues {
   prompt_code?: string;
 }
 
+interface PromptDebugMessage {
+  role: 'view' | 'human';
+  context: string;
+}
+
 const TemperatureItem: React.FC<{
   value?: number;
   onChange?: (value: number) => void;
@@ -110,8 +115,8 @@ export default function PromptEditPage() {
   // Markdown content + variables + response template
   const [value, setValue] = useState<string>('');
   const [variables, setVariables] = useState<string[]>([]);
-  const [responseTemplate, setResponseTemplate] = useState<any>({});
-  const [history, setHistory] = useState<Record<string, any>[]>([]);
+  const [responseTemplate, setResponseTemplate] = useState<Record<string, unknown>>({});
+  const [history, setHistory] = useState<PromptDebugMessage[]>([]);
   const [llmLoading, setLlmLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<{ msg: string; status: 'success' | 'error' } | undefined>();
 
@@ -260,7 +265,7 @@ export default function PromptEditPage() {
         input_values: { ...midVals },
         user_input: bottomForm.getFieldValue('user_input'),
       };
-      const tempHistory: Record<string, any>[] = [{ role: 'view', context: '' }];
+      const tempHistory: PromptDebugMessage[] = [{ role: 'view', context: '' }];
       const index = tempHistory.length - 1;
       try {
         setLlmLoading(true);

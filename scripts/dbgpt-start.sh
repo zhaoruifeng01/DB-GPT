@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # ============================================================
-# dbgpt-start: 生产模式启动（增量前端构建 + 依赖缓存）
+# dbgpt-start: 生产模式启动（增量 shell 前端构建 + 依赖缓存）
 #
 # 安装: cp scripts/dbgpt-start.sh ~/.local/bin/dbgpt-start && chmod +x ~/.local/bin/dbgpt-start
 # ============================================================
@@ -41,22 +41,25 @@ kill_port "$FRONTEND_PORT"
 STATIC_DIR="packages/dbgpt-app/src/dbgpt_app/static/web"
 SRC_MARKER="$STATIC_DIR/.src_ts"        # 源码最新 mtime
 DEP_MARKER="$STATIC_DIR/.dep_hash"      # 依赖清单 hash
+SHELL_DIR="web/shell"
+SHELL_BUILD_DIR="$SHELL_DIR/build/client"
 
 t0=$SECONDS
 
-# 3a. 仅扫描"真正的源码"，排除 lockfile / tsconfig / package.json / locales 等噪音
-#    这些改动不会影响构建产物（次要 JSON 由 next build 内部读取，不需要触发全量重建）
+# 3a. 扫描 shell 产物会读取的源码和配置，排除构建输出与依赖目录
 newest_src=$(find web -type f \
   \( -name '*.tsx' -o -name '*.ts' -o -name '*.jsx' -o -name '*.js' \
      -o -name '*.css' -o -name '*.scss' -o -name '*.less' -o -name '*.html' \) \
   ! -path '*/node_modules/*' ! -path '*/.next/*' ! -path '*/out/*' \
+  ! -path '*/shell/build/*' ! -path '*/shell/.react-router/*' \
   ! -path '*/locales/*' \
   -exec stat -f '%m' {} + 2>/dev/null | sort -rn | head -1)
 
-# 特殊：配置文件也要看 (next.config.js / tailwind.config.js / postcss.config.js)
+# 特殊：shell 构建配置也要看
 newest_cfg=$(stat -f '%m' \
-  web/next.config.js web/tailwind.config.js web/postcss.config.js \
-  web/pages/_app.tsx web/pages/_document.tsx 2>/dev/null | sort -rn | head -1)
+  web/shell/package.json web/shell/vite.config.ts web/shell/react-router.config.ts \
+  web/shell/tailwind.config.ts web/shell/postcss.config.js \
+  web/shared/package.json web/shared/src/index.ts 2>/dev/null | sort -rn | head -1)
 
 newest=$(echo -e "${newest_src:-0}\n${newest_cfg:-0}" | sort -rn | head -1)
 
@@ -64,8 +67,8 @@ last_src=0
 [[ -f "$SRC_MARKER" ]] && last_src=$(cat "$SRC_MARKER")
 
 need_build=false
-if [[ ! -d "$STATIC_DIR/_next" ]]; then
-  print "🔨 Static output missing → full build"
+if [[ ! -f "$STATIC_DIR/index.html" || ! -d "$STATIC_DIR/assets" ]]; then
+  print "🔨 Shell static output missing → full build"
   need_build=true
 elif [[ "$newest" -gt "$last_src" ]]; then
   print "🔨 Source changed since last build"
@@ -75,6 +78,7 @@ elif [[ "$newest" -gt "$last_src" ]]; then
     changed=$(find web -type f \
       \( -name '*.tsx' -o -name '*.ts' -o -name '*.css' -o -name '*.scss' \) \
       ! -path '*/node_modules/*' ! -path '*/.next/*' ! -path '*/out/*' \
+      ! -path '*/shell/build/*' ! -path '*/shell/.react-router/*' \
       ! -path '*/locales/*' \
       -newer "$SRC_MARKER" 2>/dev/null | head -5 || true)
     if [[ -n "$changed" ]]; then
@@ -87,51 +91,39 @@ elif [[ "$newest" -gt "$last_src" ]]; then
   need_build=true
 fi
 
-# 3b. 依赖变化检测（只有 package.json 或 yarn.lock 变了才重装）
-dep_hash=$(cat web/package.json web/yarn.lock 2>/dev/null | shasum | awk '{print $1}')
+# 3b. 依赖变化检测（只有 package.json / lockfile 变了才重装）
+dep_hash=$(cat package.json pnpm-lock.yaml web/shell/package.json web/shared/package.json 2>/dev/null | shasum | awk '{print $1}')
 last_dep=""
 [[ -f "$DEP_MARKER" ]] && last_dep=$(cat "$DEP_MARKER")
 need_install=false
-if [[ ! -d "web/node_modules" ]]; then
+if [[ ! -d "web/shell/node_modules" ]]; then
   need_install=true
 elif [[ "$dep_hash" != "$last_dep" ]]; then
-  print "📦 Dependencies changed → yarn install required"
+  print "📦 Dependencies changed → pnpm install required"
   need_install=true
 fi
 
 if $need_build; then
-  cd web
   if $need_install; then
-    if command -v yarn >/dev/null 2>&1; then
-      print "📦 yarn install..."
-      yarn install --frozen-lockfile 2>&1 | tail -3
-    else
-      print "📦 npm install (yarn not found)..."
-      npm install --no-package-lock 2>&1 | tail -3
-    fi
+    print "📦 pnpm install..."
+    pnpm install --filter @dbgpt/shell... 2>&1 | tail -6
   else
     print "✅ Dependencies unchanged, skipping install."
   fi
 
-  print "🔨 next build && next export..."
-  if command -v yarn >/dev/null 2>&1; then
-    yarn compile
-  else
-    npm run compile
-  fi
-  cd ..
+  print "🔨 react-router build..."
+  pnpm --dir "$SHELL_DIR" run build
 
-  # 增量同步：只覆盖变化的文件（比全量 cp -R 快）
   rm -rf "$STATIC_DIR"
   mkdir -p "$STATIC_DIR"
-  cp -R web/out/. "$STATIC_DIR/"
+  cp -R "$SHELL_BUILD_DIR"/. "$STATIC_DIR/"
 
   # 记录本次构建捕获到的最新 mtime（避免 marker 时间戳漂移 bug）
   echo "$newest" > "$SRC_MARKER"
   echo "$dep_hash" > "$DEP_MARKER"
-  print "✓ Frontend rebuilt in $((SECONDS - t0))s."
+  print "✓ Shell frontend rebuilt in $((SECONDS - t0))s."
 else
-  print "✅ Frontend unchanged, skipping build ($((SECONDS - t0))s check)."
+  print "✅ Shell frontend unchanged, skipping build ($((SECONDS - t0))s check)."
 fi
 
 # ── 4. 启动后端 ──

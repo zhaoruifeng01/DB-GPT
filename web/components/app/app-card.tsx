@@ -3,7 +3,7 @@ import { apiInterceptors, collectApp, delApp, newDialogue, publishApp, unCollect
 import { IApp } from '@/types/app';
 import { DeleteFilled, MessageFilled, StarFilled, WarningOutlined } from '@ant-design/icons';
 import { Modal, Popconfirm, Tooltip, message } from 'antd';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import React, { useContext, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

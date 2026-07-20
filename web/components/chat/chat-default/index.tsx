@@ -7,8 +7,8 @@ import { STORAGE_INIT_MESSAGE_KET } from '@/utils';
 import { useRequest } from 'ahooks';
 import { ConfigProvider, Segmented, SegmentedProps } from 'antd';
 import { t } from 'i18next';
-import Image from 'next/image';
-import { useRouter } from 'next/router';
+import Image from '@/app/image-compat';
+import { useRouter } from '@/app/router-compat';
 import { useContext, useEffect, useState } from 'react';
 
 function Default() {

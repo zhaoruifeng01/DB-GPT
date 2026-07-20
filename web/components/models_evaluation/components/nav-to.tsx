@@ -1,5 +1,5 @@
 import { Button, ButtonProps } from 'antd';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import React, { useCallback } from 'react';
 
 export const NavTo = ({

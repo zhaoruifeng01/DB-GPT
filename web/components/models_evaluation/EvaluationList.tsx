@@ -1,7 +1,7 @@
 import { EvaluationItem } from '@/types/models_evaluation';
 import { Button, Table, Tag, Tooltip } from 'antd';
 import { t } from 'i18next';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import React, { useCallback, useEffect } from 'react';
 import { useEvaluation } from './context/EvaluationContext';
 import styles from './styles.module.css';

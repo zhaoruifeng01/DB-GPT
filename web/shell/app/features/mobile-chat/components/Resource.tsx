@@ -6,7 +6,7 @@ import { useRequest } from 'ahooks';
 import type { MenuProps } from 'antd';
 import { Dropdown, Spin, Upload } from 'antd';
 import React, { useContext, useMemo, useState } from 'react';
-import { MobileChatContext } from '../';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 import OptionIcon from './OptionIcon';
 
 const Resource: React.FC = () => {

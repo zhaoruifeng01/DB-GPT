@@ -1,8 +1,8 @@
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Button, Input, Spin } from 'antd';
 import classNames from 'classnames';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import React, { forwardRef, useContext, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

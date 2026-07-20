@@ -24,9 +24,9 @@ import Icon, {
 } from '@ant-design/icons';
 import { Popover, Skeleton, Tooltip, message } from 'antd';
 import cls from 'classnames';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

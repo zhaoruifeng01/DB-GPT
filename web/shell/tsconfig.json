@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./build",
     "jsx": "react-jsx",
+    "noUncheckedIndexedAccess": false,
     "types": ["@react-router/node", "vite/client"],
     "rootDirs": [".", "./.react-router/types"],
     "paths": {
@@ -10,6 +11,9 @@
       "@dbgpt/shared": ["../shared/src/index.ts"],
       "@dbgpt/shared/*": ["../shared/src/*"],
       "@/design-tokens": ["../design-tokens/index.ts"],
+      "@/app/router-compat": ["./app/lib/router-compat.ts"],
+      "@/app/image-compat": ["./app/lib/image-compat.tsx"],
+      "@/app/dynamic-compat": ["./app/lib/dynamic-compat.tsx"],
       "@/locales/*": ["../locales/*"],
       "@/*": ["../*"],
       "next/navigation": ["./app/lib/next-compat/navigation.ts"],

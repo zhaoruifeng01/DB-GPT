@@ -7,7 +7,7 @@ import { App, Button, Divider } from 'antd';
 import classNames from 'classnames';
 import copy from 'copy-to-clipboard';
 import React, { useContext, useState } from 'react';
-import { MobileChatContext } from '..';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 import DislikeDrawer from './DislikeDrawer';
 
 interface Tags {

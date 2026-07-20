@@ -92,8 +92,8 @@ class _RemoteModelController(APIMixin, BaseModelController):
     def __init__(
         self,
         urls: str,
-        health_check_interval_secs: int = 30,
-        health_check_timeout_secs: int = 60,
+        health_check_interval_secs: int = 180,
+        health_check_timeout_secs: int = 240,
         check_health: bool = True,
         choice_type: Literal["latest_first", "random"] = "latest_first",
     ) -> None:

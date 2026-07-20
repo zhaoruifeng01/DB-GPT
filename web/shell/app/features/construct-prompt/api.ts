@@ -34,6 +34,11 @@ export interface PromptListQuery {
   page_size: number;
 }
 
+export interface PromptVerifyResponse {
+  success?: boolean;
+  err_msg?: string;
+}
+
 export const promptApi = {
   /** Targets (scenes) available for a given prompt type. */
   targets: (type: string) => unwrap<PromptTarget[]>(GET(`/prompt/type/targets?prompt_type=${type}`)),
@@ -51,7 +56,7 @@ export const promptApi = {
   /** Paginated prompt list. */
   list: (query: PromptListQuery) => unwrap<PromptListResponse>(POST(`/prompt/query_page?page=${query.page}&page_size=${query.page_size}`, query)),
   /** Verify LLM output against the prompt's response schema. */
-  outVerify: (data: LlmOutVerifyParams) => unwrap<Record<string, any>>(POST('/prompt/response/verify', data)),
+  outVerify: (data: LlmOutVerifyParams) => unwrap<PromptVerifyResponse>(POST('/prompt/response/verify', data)),
 };
 
 /**

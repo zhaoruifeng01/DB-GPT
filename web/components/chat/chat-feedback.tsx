@@ -83,7 +83,7 @@ const ChatFeedback = ({ conv_index, question, knowledge_space, select_param }: P
   };
 
   const selectOptions = select_param
-    ? Object.keys(select_param).map(key => ({ value: key, label: select_param[key] }))
+    ? Object.entries(select_param).map(([key, label]) => ({ value: key, label }))
     : [];
 
   const content = (

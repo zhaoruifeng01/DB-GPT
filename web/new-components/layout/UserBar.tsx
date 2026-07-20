@@ -3,7 +3,7 @@ import { STORAGE_TOKEN_KEY, STORAGE_USERINFO_KEY } from '@/utils/constants/index
 import { LogoutOutlined } from '@ant-design/icons';
 import { Avatar, Tooltip } from 'antd';
 import cls from 'classnames';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

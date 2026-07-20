@@ -1,5 +1,5 @@
 import { getModelIcon } from '@/utils/constants';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import React, { memo, useMemo } from 'react';
 
 const ModelIcon: React.FC<{ width?: number; height?: number; model?: string }> = ({ width, height, model }) => {

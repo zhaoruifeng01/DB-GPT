@@ -2,7 +2,7 @@ import MarkDownContext from '@/new-components/common/MarkdownContext';
 import { LinkOutlined } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 import { Divider, Drawer, Tabs, Typography } from 'antd';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import React, { useMemo, useState } from 'react';
 
 const ReferencesContentView: React.FC<{ references: any }> = ({ references }) => {

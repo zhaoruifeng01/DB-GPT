@@ -5,7 +5,7 @@
 import { ChatContext } from '@/app/chat-context';
 import { MODEL_ICON_MAP } from '@/utils/constants';
 import { Select } from 'antd';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 

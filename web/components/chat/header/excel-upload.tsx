@@ -1,6 +1,6 @@
 import { ChatContext } from '@/app/chat-context';
 import { apiInterceptors, postChatModeParamsFileLoad } from '@/client/api';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { LinkOutlined, SelectOutlined, UploadOutlined } from '@ant-design/icons';
 import { Button, Tooltip, Upload, UploadFile, UploadProps, message } from 'antd';
 import { PropsWithChildren, useContext, useState } from 'react';

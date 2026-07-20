@@ -1,17 +1,19 @@
 import { ChatContext } from '@/app/chat-context';
+import dynamic from '@/app/dynamic-compat';
 import { apiInterceptors, getAppInfo } from '@/client/api';
-import MonacoEditor from '@/components/chat/monaco-editor';
 import ChatContent from '@/new-components/chat/content/ChatContent';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { IApp } from '@/types/app';
 import { IChatDialogueMessageSchema } from '@/types/chat';
 import { STORAGE_INIT_MESSAGE_KET, getInitMessage } from '@/utils';
 import { useAsyncEffect } from 'ahooks';
 import { Modal } from 'antd';
 import { cloneDeep } from 'lodash';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import React, { useContext, useMemo, useState } from 'react';
 import { v4 as uuid } from 'uuid';
+
+const MonacoEditor = dynamic(() => import('@/components/chat/monaco-editor'), { ssr: false });
 
 const ChatCompletion: React.FC = () => {
   const searchParams = useSearchParams();
@@ -107,7 +109,7 @@ const ChatCompletion: React.FC = () => {
           setJsonModalOpen(false);
         }}
       >
-        <MonacoEditor className='w-full h-[500px]' language='json' value={jsonValue} />
+        {jsonModalOpen && <MonacoEditor className='w-full h-[500px]' language='json' value={jsonValue} />}
       </Modal>
     </div>
   );

@@ -20,9 +20,9 @@ export default function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   remixContext: EntryContext,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _loadContext: AppLoadContext,
 ) {
+  void _loadContext;
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     let status = responseStatusCode;

@@ -1,5 +1,5 @@
 import { ChatContext } from '@/app/chat-context';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { SettingOutlined } from '@ant-design/icons';
 import { Select, Tooltip } from 'antd';
 import React, { memo, useContext, useMemo } from 'react';

@@ -4,7 +4,7 @@ import { useRequest } from 'ahooks';
 import { Button, Divider, Input, Popover, Tag, message } from 'antd';
 import classNames from 'classnames';
 import copy from 'copy-to-clipboard';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

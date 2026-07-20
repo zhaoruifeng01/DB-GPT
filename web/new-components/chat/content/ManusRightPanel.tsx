@@ -973,7 +973,7 @@ const TerminalRenderer: React.FC<{
             <Tooltip title='复制全部'>
               <button
                 className='flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded hover:bg-gray-700/50'
-                onClick={() => copyToClipboard(allText)}
+                onClick={() => copyToClipboard(allText, '复制成功')}
               >
                 <CopyOutlined className='text-xs' />
               </button>
@@ -1928,10 +1928,7 @@ const ManusRightPanel: React.FC<ManusRightPanelProps> = ({
                       className={classNames('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', {
                         'bg-emerald-50 dark:bg-emerald-900/30': activeStep.type === 'read' || activeStep.type === 'sql',
                         'bg-amber-50 dark:bg-amber-900/30': activeStep.type === 'edit' || activeStep.type === 'write',
-                        'bg-purple-50 dark:bg-purple-900/30': activeStep.type === 'bash',
                         'bg-cyan-50 dark:bg-cyan-900/30': activeStep.type === 'grep' || activeStep.type === 'glob',
-                        'bg-blue-50 dark:bg-blue-900/30': activeStep.type === 'python',
-                        'bg-orange-50 dark:bg-orange-900/30': activeStep.type === 'html',
                         'bg-indigo-50 dark:bg-indigo-900/30': activeStep.type === 'task' || activeStep.type === 'skill',
                         'bg-gray-50 dark:bg-gray-800': activeStep.type === 'other',
                       })}

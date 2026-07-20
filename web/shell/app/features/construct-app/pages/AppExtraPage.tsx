@@ -1,10 +1,4 @@
 import AppDefaultIcon from '@/new-components/common/AppDefaultIcon';
-import CreateAppModal from '@/pages/construct/app/components/create-app-modal';
-import AwelLayout from '@/pages/construct/app/extra/components/AwelLayout';
-import NativeApp from '@/pages/construct/app/extra/components/NativeApp';
-import RecommendQuestions from '@/pages/construct/app/extra/components/RecommendQuestions';
-import AutoPlan from '@/pages/construct/app/extra/components/auto-plan';
-import styles from '@/pages/construct/app/extra/styles.module.css';
 import type { CreateAppParams, IApp } from '@/types/app';
 import { readJSON, STORAGE_KEYS, writeJSON } from '@dbgpt/shared';
 import { EditOutlined, LeftOutlined } from '@ant-design/icons';
@@ -15,6 +9,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 
+import CreateAppModal from '~/features/construct-app/components/create-app-modal';
+import AwelLayout from '~/features/construct-app/components/extra/components/AwelLayout';
+import NativeApp from '~/features/construct-app/components/extra/components/NativeApp';
+import RecommendQuestions from '~/features/construct-app/components/extra/components/RecommendQuestions';
+import AutoPlan from '~/features/construct-app/components/extra/components/auto-plan';
+import styles from '~/features/construct-app/components/extra/styles.module.css';
 import { useUpdateApp } from '~/features/construct-app/queries';
 
 type AppDraft = IApp & { isEdit?: boolean };

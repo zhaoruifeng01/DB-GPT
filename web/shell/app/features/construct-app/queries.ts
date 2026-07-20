@@ -42,6 +42,21 @@ export function useUpdateApp() {
   });
 }
 
+export function useCreateApp() {
+  const invalidate = useInvalidateAppList();
+  return useMutation({
+    mutationFn: (data: CreateAppParams) => constructAppApi.create(data),
+    onSettled: invalidate,
+  });
+}
+
+export function useTeamModes() {
+  return useQuery({
+    queryKey: constructAppKeys.teamModes(),
+    queryFn: () => constructAppApi.teamModes(),
+  });
+}
+
 export function useNewAppDialogue() {
   return useMutation({
     mutationFn: (data: NewDialogueParam) => constructAppApi.newDialogue(data),

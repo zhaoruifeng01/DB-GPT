@@ -12,8 +12,8 @@ import {
 import { GPTVis } from '@antv/gpt-vis';
 import { message } from 'antd';
 import classNames from 'classnames';
-import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
+import Image from '@/app/image-compat';
+import { useSearchParams } from '@/app/router-compat';
 import React, { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Feedback from './Feedback';
@@ -140,8 +140,8 @@ const ChatContent: React.FC<{
 
   const extraMarkdownComponents = useMemo<MarkdownComponent>(
     () => ({
-      'custom-view'({ children }) {
-        const index = +children.toString();
+      'custom-view'({ children }: any) {
+        const index = +(children ?? '').toString();
         if (!cachePluginContext[index]) {
           return children;
         }

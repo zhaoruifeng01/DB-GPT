@@ -36,6 +36,7 @@ export default [
   { path: '/construct/knowledge', file: 'routes/construct-knowledge.tsx' },
   { path: '/construct/knowledge/chunk', file: 'routes/construct-knowledge-chunk.tsx' },
   { path: '/construct/database', file: 'routes/construct-database.tsx' },
+  { path: '/construct/agent', file: 'routes/construct-agent.tsx' },
   { path: '/construct/dbgpts', file: 'routes/construct-dbgpts.tsx' },
   { path: '/construct/connectors', file: 'routes/construct-connectors.tsx' },
   { path: '/construct/skills', file: 'routes/construct-skills.tsx' },

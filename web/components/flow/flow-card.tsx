@@ -10,7 +10,7 @@ import {
   WarningOutlined,
 } from '@ant-design/icons';
 import { Modal, Tooltip } from 'antd';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import qs from 'querystring';
 import React, { useContext } from 'react';
 import { useTranslation } from 'react-i18next';

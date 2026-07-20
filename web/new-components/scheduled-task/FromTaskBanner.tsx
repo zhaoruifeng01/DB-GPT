@@ -1,6 +1,6 @@
 import { ArrowLeftOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 

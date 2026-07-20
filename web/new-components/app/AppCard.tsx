@@ -2,8 +2,8 @@ import { ChatContext } from '@/app/chat-context';
 import { apiInterceptors, newDialogue } from '@/client/api';
 import { IApp } from '@/types/app';
 import { Card, Tag, Tooltip, Typography } from 'antd';
-import Image from 'next/image';
-import { useRouter } from 'next/router';
+import Image from '@/app/image-compat';
+import { useRouter } from '@/app/router-compat';
 import React, { useContext } from 'react';
 
 const languageMap = {

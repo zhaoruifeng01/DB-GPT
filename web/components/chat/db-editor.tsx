@@ -4,7 +4,7 @@ import { OnChange } from '@monaco-editor/react';
 import { useRequest } from 'ahooks';
 import { Button, Input, Select, Table, Tooltip, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import { ChangeEvent, Key, useEffect, useMemo, useState } from 'react';
 import Chart from '../chart';
 import Header from './header';
@@ -21,6 +21,8 @@ import Field from '../icons/field';
 import TableIcon from '../icons/table';
 
 const { Search } = Input;
+
+const toTreeKey = (key: Key): string | number => (typeof key === 'number' ? key : String(key));
 
 type ITableData = {
   columns: string[];
@@ -136,7 +138,7 @@ function DbEditorContent({ layout = 'LR', editorValue, chartData, tableData, tab
       </div>
       <div className='flex-1 h-full overflow-auto bg-white dark:bg-theme-dark-container rounded p-4'>
         {tableData?.values.length ? (
-          <Table bordered scroll={{ x: 'auto' }} rowKey={columns[0].key} columns={columns} dataSource={dataSource} />
+          <Table bordered scroll={{ x: 'auto' }} rowKey={(_, index) => String(index ?? 0)} columns={columns} dataSource={dataSource} />
         ) : (
           <div className='h-full flex justify-center items-center'>
             <MyEmpty />
@@ -156,7 +158,7 @@ function DbEditor() {
   const [chartData, setChartData] = useState<any>();
   const [editorValue, setEditorValue] = useState<EditorValueProps | EditorValueProps[]>();
   const [newEditorValue, setNewEditorValue] = useState<EditorValueProps>();
-  const [tableData, setTableData] = useState<{ columns: string[]; values: (string | number)[] }>();
+  const [tableData, setTableData] = useState<ITableData>();
   const [currentTabIndex, setCurrentTabIndex] = useState<number>();
   const [isMenuExpand, setIsMenuExpand] = useState<boolean>(false);
   const [layout, setLayout] = useState<'TB' | 'LR'>('TB');
@@ -164,6 +166,8 @@ function DbEditor() {
   const searchParams = useSearchParams();
   const id = searchParams?.get('id');
   const scene = searchParams?.get('scene');
+
+  const getCurrentEditorValue = () => (Array.isArray(editorValue) ? editorValue[currentTabIndex ?? 0] : editorValue);
 
   const { data: rounds } = useRequest(
     async () =>
@@ -242,12 +246,13 @@ function DbEditor() {
   const { run: submitSql, loading: submitLoading } = useRequest(
     async () => {
       const db_name = rounds?.data?.find((item: RoundProps) => item.round === currentRound)?.db_name;
+      const currentEditorValue = getCurrentEditorValue();
       return await sendSpacePostRequest(`/api/v1/sql/editor/submit`, {
         conv_uid: id,
         db_name,
         conv_round: currentRound,
-        old_sql: editorValue?.sql,
-        old_speak: editorValue?.thoughts,
+        old_sql: currentEditorValue?.sql,
+        old_speak: currentEditorValue?.thoughts,
         new_sql: newEditorValue?.sql,
         new_speak: newEditorValue?.thoughts?.match(/^\n--(.*)\n\n$/)?.[1]?.trim() || newEditorValue?.thoughts,
       });
@@ -265,11 +270,12 @@ function DbEditor() {
   const { run: submitChart, loading: submitChartLoading } = useRequest(
     async () => {
       const db_name = rounds?.data?.find((item: any) => item.round === currentRound)?.db_name;
+      const currentEditorValue = getCurrentEditorValue();
       return await sendSpacePostRequest(`/api/v1/chart/editor/submit`, {
         conv_uid: id,
         chart_title: newEditorValue?.title,
         db_name,
-        old_sql: editorValue?.[currentTabIndex ?? 0]?.sql,
+        old_sql: currentEditorValue?.sql,
         new_chart_type: newEditorValue?.showcase,
         new_sql: newEditorValue?.sql,
         new_comment: newEditorValue?.thoughts?.match(/^\n--(.*)\n\n$/)?.[1]?.trim() || newEditorValue?.thoughts,
@@ -402,9 +408,10 @@ function DbEditor() {
       for (let i = 0; i < data.length; i++) {
         const node = data[i];
         const { key, title } = node;
-        res.push({ key, title: title as string, parentKey });
+        const nodeKey = toTreeKey(key);
+        res.push({ key: nodeKey, title: title as string, parentKey });
         if (node.children) {
-          generateList(node.children, key);
+          generateList(node.children, nodeKey);
         }
       }
     };

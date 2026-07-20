@@ -1,5 +1,5 @@
 import { apiInterceptors, collectApp, unCollectApp } from '@/client/api';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { ExportOutlined, LoadingOutlined, StarFilled, StarOutlined } from '@ant-design/icons';
 import { Spin, Tag, Typography, message } from 'antd';
 import copy from 'copy-to-clipboard';

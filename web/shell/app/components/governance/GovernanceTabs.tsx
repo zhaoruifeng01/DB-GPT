@@ -31,7 +31,7 @@ import {
   type UserInput,
 } from '~/lib/governance-api';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 // --- Shared helpers ---
 
@@ -48,8 +48,6 @@ function useInvalidate() {
 }
 
 // --- 1. Overview ---
-
-const OVERVIEW_KEYS = [['datasources'], ['grants'], ['mask-rules'], ['catalog-products'], ['pending-requests']] as const;
 
 const OVERVIEW_LABELS: Record<string, string> = {
   datasources: '数据源',

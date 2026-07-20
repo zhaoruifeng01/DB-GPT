@@ -1,6 +1,6 @@
 import { DatabaseOutlined, FileTextOutlined, RobotOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import classNames from 'classnames';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 

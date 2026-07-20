@@ -5,7 +5,7 @@ import { STORAGE_LANG_KEY, STORAGE_THEME_KEY } from '@/utils/constants/index';
 import Icon, { GlobalOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Layout, Popover } from 'antd';
 import { dayjs } from '@/utils/date';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import Link from 'next/link';
 import React, { ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';

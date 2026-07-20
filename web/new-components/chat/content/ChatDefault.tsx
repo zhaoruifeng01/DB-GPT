@@ -7,8 +7,8 @@ import { STORAGE_INIT_MESSAGE_KET } from '@/utils';
 import { useRequest } from 'ahooks';
 import { ConfigProvider, Segmented, SegmentedProps } from 'antd';
 import { t } from 'i18next';
-import Image from 'next/image';
-import { useRouter } from 'next/router';
+import Image from '@/app/image-compat';
+import { useRouter } from '@/app/router-compat';
 import { useContext, useEffect, useState } from 'react';
 
 function ChatDefault() {
@@ -61,9 +61,10 @@ function ChatDefault() {
       onSuccess: res => {
         const [_error, data] = res;
         if (activeKey === 'recommend') {
+          const appList = Array.isArray(data) ? data : data?.app_list || [];
           return setApps({
-            app_list: data,
-            total_count: data?.length || 0,
+            app_list: appList,
+            total_count: appList.length,
           });
         }
         setApps(data || {});

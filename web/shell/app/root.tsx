@@ -1,7 +1,18 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse, useRouteError } from 'react-router';
+import {
+  Links,
+  Meta,
+  Navigate,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  isRouteErrorResponse,
+  useLocation,
+  useRouteError,
+} from 'react-router';
 import { App as AntdApp, ConfigProvider } from 'antd';
+import { getToken, getUserInfo } from '@dbgpt/shared';
 import type { ReactElement } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { bootApi } from '~/lib/api';
 import { bootI18n } from '~/lib/i18n';
@@ -26,10 +37,15 @@ import '~/styles/globals.css';
  */
 export function Layout({ children }: { children: React.ReactNode }) {
   const theme = usePreferences(s => s.theme);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     applyThemeClass(theme);
   }, [theme]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <html lang="en" className={theme}>
@@ -40,11 +56,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ConfigProvider theme={getAntdTheme(theme)}>
-          <AntdApp>
-            <QueryProvider>{children}</QueryProvider>
-          </AntdApp>
-        </ConfigProvider>
+        {mounted ? (
+          <ConfigProvider theme={getAntdTheme(theme)}>
+            <AntdApp>
+              <QueryProvider>{children}</QueryProvider>
+            </AntdApp>
+          </ConfigProvider>
+        ) : (
+          <div id="dbgpt-shell-loading" />
+        )}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -58,9 +78,23 @@ export default function App() {
   bootI18n();
   return (
     <BrowserOnlyChatContextProvider>
-      <Outlet />
+      <AuthenticatedRoutes />
     </BrowserOnlyChatContextProvider>
   );
+}
+
+function AuthenticatedRoutes() {
+  const location = useLocation();
+  const isPublicRoute =
+    location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/share/') ||
+    location.pathname.startsWith('/mobile/');
+
+  if (typeof window !== 'undefined' && !isPublicRoute && (!getToken() || !getUserInfo())) {
+    return <Navigate to='/login' replace />;
+  }
+
+  return <Outlet />;
 }
 
 function BrowserOnlyChatContextProvider({ children }: { children: ReactElement }) {

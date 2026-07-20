@@ -1,4 +1,4 @@
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { ControlOutlined } from '@ant-design/icons';
 import { InputNumber, Popover, Slider, Tooltip } from 'antd';
 import React, { memo, useContext, useMemo } from 'react';

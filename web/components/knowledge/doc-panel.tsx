@@ -27,7 +27,7 @@ import {
 import { useRequest } from 'ahooks';
 import { Button, Card, Divider, Dropdown, Empty, Form, Input, Modal, Space, Spin, Tag, Tooltip, message } from 'antd';
 import cls from 'classnames';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import RecallTestModal from './RecallTestModal';

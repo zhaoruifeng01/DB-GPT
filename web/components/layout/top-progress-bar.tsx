@@ -1,4 +1,4 @@
-import Router from 'next/router';
+import Router from '@/app/router-compat';
 import NProgress from 'nprogress';
 
 let timer: any;

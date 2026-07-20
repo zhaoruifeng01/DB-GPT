@@ -16,7 +16,7 @@ import Icon, {
 import { ConfigProvider, Tabs } from 'antd';
 import classNames from 'classnames';
 import { t } from 'i18next';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import React, { useContext, useEffect, useState } from 'react';
 import './style.css';
 

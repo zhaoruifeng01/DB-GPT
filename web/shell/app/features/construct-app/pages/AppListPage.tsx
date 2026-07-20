@@ -1,6 +1,5 @@
 import { ChatContext } from '@/app/chat-context';
 import BlurredCard, { ChatButton, InnerDropdown } from '@/new-components/common/blurredCard';
-import CreateAppModal from '@/pages/construct/app/components/create-app-modal';
 import type { IApp } from '@/types/app';
 import { dayjs } from '@/utils/date';
 import { clearKey, STORAGE_KEYS, writeJSON } from '@dbgpt/shared';
@@ -13,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import ConstructLayout from '~/components/construct/ConstructLayout';
+import CreateAppModal from '~/features/construct-app/components/create-app-modal';
 import { useAppList, useDeleteApp, useNewAppDialogue, usePublishApp } from '~/features/construct-app/queries';
 
 type TabKey = 'all' | 'published' | 'unpublished';

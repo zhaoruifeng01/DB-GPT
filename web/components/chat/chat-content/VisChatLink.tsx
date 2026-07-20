@@ -1,5 +1,5 @@
-import { ChatContentContext } from '@/pages/chat';
-import { MobileChatContext } from '@/pages/mobile/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 import { Button } from 'antd';
 import React, { useContext } from 'react';
 

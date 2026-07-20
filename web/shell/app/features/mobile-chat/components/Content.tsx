@@ -1,5 +1,5 @@
 import React, { memo, useContext, useMemo } from 'react';
-import { MobileChatContext } from '../';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 import ChatDialog from './ChatDialog';
 
 const Content: React.FC = () => {

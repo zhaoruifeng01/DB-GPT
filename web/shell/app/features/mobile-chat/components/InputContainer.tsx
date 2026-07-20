@@ -9,7 +9,7 @@ import { Button, Input, Popover, Spin, Tag } from 'antd';
 import classnames from 'classnames';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { MobileChatContext } from '../';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 import ModelSelector from './ModelSelector';
 import Resource from './Resource';
 import Thermometer from './Thermometer';

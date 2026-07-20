@@ -1,5 +1,5 @@
 import { RobotOutlined } from '@ant-design/icons';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import React, { memo } from 'react';
 import AppDefaultIcon from '../../common/AppDefaultIcon';
 import ModelIcon from './ModelIcon';

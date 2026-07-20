@@ -1,10 +1,10 @@
 import { apiInterceptors, clearChatHistory } from '@/client/api';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { ClearOutlined, LoadingOutlined, PauseCircleOutlined, RedoOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
 import { Spin, Tooltip } from 'antd';
 import classNames from 'classnames';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import React, { useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

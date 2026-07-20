@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChatContext } from '@/app/chat-context';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { apiInterceptors, getAppInfo, getChatHistory, getDialogueList } from '@/client/api';
 import PromptBot from '@/components/common/prompt-bot';
-import useChat, { ChatContextStatus, PendingQuestionEvent } from '@/hooks/use-chat';
+import useChat from '@/hooks/use-chat';
 import ChatContentContainer from '@/new-components/chat/ChatContentContainer';
 import ChatDefault from '@/new-components/chat/content/ChatDefault';
 import QuestionDock from '@/new-components/chat/content/QuestionDock';
@@ -16,7 +17,6 @@ import { Flex, Layout, Spin } from 'antd';
 import type { MetaDescriptor } from 'react-router';
 import React, {
   Suspense,
-  createContext,
   lazy,
   useCallback,
   useContext,
@@ -31,75 +31,6 @@ const DbEditor = lazy(() => import('@/components/chat/db-editor'));
 const ChatContainer = lazy(() => import('@/components/chat/chat-container'));
 
 const { Content } = Layout;
-
-interface ChatContentProps {
-  history: ChatHistoryResponse; // 会话记录列表
-  replyLoading: boolean; // 对话回复loading
-  scrollRef: React.RefObject<HTMLDivElement>; // 会话内容可滚动dom
-  canAbort: boolean; // 是否能中断回复
-  chartsData: ChartData[];
-  agent: string;
-  currentDialogue: IChatDialogueSchema; // 当前选择的会话
-  appInfo: IApp;
-  temperatureValue: any;
-  maxNewTokensValue: any;
-  resourceValue: any;
-  knowledgeValue: string | null; // 选中的知识库
-  modelValue: string;
-  setModelValue: React.Dispatch<React.SetStateAction<string>>;
-  setTemperatureValue: React.Dispatch<React.SetStateAction<any>>;
-  setMaxNewTokensValue: React.Dispatch<React.SetStateAction<any>>;
-  setResourceValue: React.Dispatch<React.SetStateAction<any>>;
-  setKnowledgeValue: React.Dispatch<React.SetStateAction<string | null>>; // 设置选中的知识库
-  setAppInfo: React.Dispatch<React.SetStateAction<IApp>>;
-  setAgent: React.Dispatch<React.SetStateAction<string>>;
-  setCanAbort: React.Dispatch<React.SetStateAction<boolean>>;
-  setReplyLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  handleChat: (content: UserChatContent, data?: Record<string, any>) => Promise<void>; // 处理会话请求逻辑函数
-  refreshDialogList: () => void;
-  refreshHistory: () => void;
-  refreshAppInfo: () => void;
-  setHistory: React.Dispatch<React.SetStateAction<ChatHistoryResponse>>;
-  // Context management status (available for chat_agent scenes)
-  contextStatus: ChatContextStatus | null;
-  // Human-in-the-loop question
-  pendingQuestion: PendingQuestionEvent | null;
-  replyQuestion: (requestId: string, answers: string[][]) => Promise<void>;
-  rejectQuestion: (requestId: string) => Promise<void>;
-}
-export const ChatContentContext = createContext<ChatContentProps>({
-  history: [],
-  replyLoading: false,
-  scrollRef: { current: null },
-  canAbort: false,
-  chartsData: [],
-  agent: '',
-  currentDialogue: {} as any,
-  appInfo: {} as any,
-  temperatureValue: 0.5,
-  maxNewTokensValue: 1024,
-  resourceValue: {},
-  knowledgeValue: null,
-  modelValue: '',
-  setModelValue: () => {},
-  setResourceValue: () => {},
-  setKnowledgeValue: () => {},
-  setTemperatureValue: () => {},
-  setMaxNewTokensValue: () => {},
-  setAppInfo: () => {},
-  setAgent: () => {},
-  setCanAbort: () => {},
-  setReplyLoading: () => {},
-  refreshDialogList: () => {},
-  refreshHistory: () => {},
-  refreshAppInfo: () => {},
-  setHistory: () => {},
-  handleChat: () => Promise.resolve(),
-  contextStatus: null,
-  pendingQuestion: null,
-  replyQuestion: () => Promise.resolve(),
-  rejectQuestion: () => Promise.resolve(),
-});
 
 export function meta(): MetaDescriptor[] {
   return [{ title: 'DB-GPT · Chat' }];
@@ -148,20 +79,6 @@ const ChatPage: React.FC = () => {
   const [resourceValue, setResourceValue] = useState<any>();
   const [knowledgeValue, setKnowledgeValue] = useState<string | null>(null);
   const [modelValue, setModelValue] = useState<string>('');
-
-  // Auto-send init message if present
-  useEffect(() => {
-    if (initMsg && chatId && !history.length && !replyLoading) {
-      // Small delay to ensure everything is loaded
-      const timer = setTimeout(() => {
-        handleChat(initMsg);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-    // handleChat is declared below via useCallback; the closure resolves at
-    // call time so runtime is fine. Preserved from web/pages/chat/index.tsx.
-    // @ts-expect-error TS2448: Block-scoped variable 'handleChat' used before declaration.
-  }, [chatId, handleChat, history.length, initMsg, replyLoading]);
 
   useEffect(() => {
     setTemperatureValue(appInfo?.param_need?.filter(item => item.type === 'temperature')[0]?.value || 0.6);
@@ -367,6 +284,17 @@ const ChatPage: React.FC = () => {
     },
     [chat, chatId, history, modelValue, scene],
   );
+
+  // Auto-send init message after the callback exists. Dependency arrays are
+  // evaluated during render, so referencing handleChat earlier triggers TDZ.
+  useEffect(() => {
+    if (initMsg && chatId && !history.length && !replyLoading) {
+      const timer = setTimeout(() => {
+        handleChat(initMsg);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [chatId, handleChat, history.length, initMsg, replyLoading]);
 
   useAsyncEffect(async () => {
     // 如果是默认小助手，不获取历史记录

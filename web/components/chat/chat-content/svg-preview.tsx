@@ -11,20 +11,25 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CodePreview } from './code-preview';
 
+interface SvgPreviewProps {
+  code: string;
+  language?: string;
+}
+
 /**
  * SVG preview component is used to display SVG code and provide preview and download functionality
  * @param {Object} props The component props
  * @param {string} props.code SVG code content
  * @param {string} props.language Code language, default is svg
  */
-const SvgPreview = ({ code, language = 'svg' }) => {
+const SvgPreview = ({ code, language = 'svg' }: SvgPreviewProps) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [zoom, setZoom] = useState(100);
   const { t } = useTranslation();
 
   // Clean up SVG code (remove XML declaration, etc.)
-  const cleanSvgCode = svgCode => {
+  const cleanSvgCode = (svgCode: string) => {
     // Remove XML declaration
     let cleaned = svgCode.replace(/<\?xml[^>]*\?>/g, '');
 
@@ -45,8 +50,8 @@ const SvgPreview = ({ code, language = 'svg' }) => {
       const heightMatch = cleaned.match(/height=["']([^"']*)["']/);
 
       if (widthMatch && heightMatch) {
-        const width = widthMatch[1].replace(/[^\d.]/g, '');
-        const height = heightMatch[1].replace(/[^\d.]/g, '');
+        const width = (widthMatch[1] ?? '').replace(/[^\d.]/g, '');
+        const height = (heightMatch[1] ?? '').replace(/[^\d.]/g, '');
 
         if (width && height) {
           cleaned = cleaned.replace('<svg', `<svg viewBox="0 0 ${width} ${height}"`);
@@ -124,6 +129,7 @@ const SvgPreview = ({ code, language = 'svg' }) => {
     // Create a canvas
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     // Create an image element
     const img = new Image();
@@ -160,7 +166,7 @@ const SvgPreview = ({ code, language = 'svg' }) => {
   };
 
   // Control zoom
-  const handleZoomChange = value => {
+  const handleZoomChange = (value: number) => {
     setZoom(value);
   };
 

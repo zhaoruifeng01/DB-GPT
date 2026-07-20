@@ -2,7 +2,7 @@ import { EllipsisOutlined } from '@ant-design/icons';
 import { Divider, DropDownProps, Dropdown, Tooltip, Typography } from 'antd';
 import cls from 'classnames';
 import { t } from 'i18next';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import React from 'react';
 
 import AppDefaultIcon from '../AppDefaultIcon';

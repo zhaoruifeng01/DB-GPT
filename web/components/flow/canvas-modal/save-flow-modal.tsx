@@ -2,7 +2,7 @@ import { addFlow, apiInterceptors, updateFlowById } from '@/client/api';
 import { IFlowData, IFlowUpdateParam } from '@/types/flow';
 import { mapHumpToUnderline } from '@/utils/flow';
 import { Button, Checkbox, Form, Input, Modal, message } from 'antd';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ReactFlowInstance } from 'reactflow';

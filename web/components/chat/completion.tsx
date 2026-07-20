@@ -9,7 +9,7 @@ import { Button, Modal, Tooltip, message } from 'antd';
 import classNames from 'classnames';
 import copy from 'copy-to-clipboard';
 import { cloneDeep } from 'lodash';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

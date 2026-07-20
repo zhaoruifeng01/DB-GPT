@@ -9,14 +9,14 @@
 import { useAsyncEffect } from 'ahooks';
 import { Modal } from 'antd';
 import { cloneDeep } from 'lodash';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 
 import { ChatContext } from '@/app/chat-context';
+import dynamic from '@/app/dynamic-compat';
 import { apiInterceptors, getAppInfo } from '@/client/api';
-import MonacoEditor from '@/components/chat/monaco-editor';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { IApp } from '@/types/app';
 import { IChatDialogueMessageSchema } from '@/types/chat';
 import { STORAGE_INIT_MESSAGE_KET, getInitMessage } from '@/utils';
@@ -24,6 +24,8 @@ import { STORAGE_INIT_MESSAGE_KET, getInitMessage } from '@/utils';
 import { parseReActText } from '@/hooks/use-react-agent';
 import ContextUsageBar from './ContextUsageBar';
 import OpenCodeSessionTurn, { MessagePart } from './OpenCodeSessionTurn';
+
+const MonacoEditor = dynamic(() => import('@/components/chat/monaco-editor'), { ssr: false });
 
 interface GroupedTurn {
   human?: IChatDialogueMessageSchema;
@@ -226,7 +228,7 @@ const OpenCodeChatCompletion: React.FC = () => {
         onOk={() => setJsonModalOpen(false)}
         onCancel={() => setJsonModalOpen(false)}
       >
-        <MonacoEditor className='w-full h-[500px]' language='json' value={jsonValue} />
+        {jsonModalOpen && <MonacoEditor className='w-full h-[500px]' language='json' value={jsonValue} />}
       </Modal>
     </div>
   );

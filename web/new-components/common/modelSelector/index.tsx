@@ -4,7 +4,7 @@ import { MODEL_ICON_MAP } from '@/utils/constants';
 import { CaretDownOutlined } from '@ant-design/icons';
 import { useRequest } from 'ahooks';
 import { Select } from 'antd';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import React, { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

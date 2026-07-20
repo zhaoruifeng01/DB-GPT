@@ -5,8 +5,8 @@ import { CaretLeftOutlined, CaretRightOutlined, DeleteOutlined, ShareAltOutlined
 import type { MenuProps } from 'antd';
 import { Flex, Layout, Modal, Spin, Tooltip, Typography, message } from 'antd';
 import copy from 'copy-to-clipboard';
-import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import Image from '@/app/image-compat';
+import { useRouter, useSearchParams } from '@/app/router-compat';
 import React, { useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppDefaultIcon from '../../common/AppDefaultIcon';

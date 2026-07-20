@@ -5,7 +5,7 @@ import { ChartData, ChatHistoryResponse } from '@/types/chat';
 import { getInitMessage } from '@/utils';
 import { useAsyncEffect } from 'ahooks';
 import classNames from 'classnames';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import Chart from '../chart';
 import MyEmpty from '../common/MyEmpty';

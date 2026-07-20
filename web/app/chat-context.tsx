@@ -11,7 +11,7 @@ import { UserInfoResponse } from '@/types/userinfo';
 import { getUserId } from '@/utils';
 import { STORAGE_THEME_KEY } from '@/utils/constants/index';
 import { useRequest } from 'ahooks';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import { createContext, useEffect } from 'react';
 
 const EMPTY_MODEL_LIST: string[] = [];
@@ -166,8 +166,7 @@ const ChatContextProvider = ({ children }: { children: React.ReactElement }) => 
   // --- Fetch admin list (same useRequest as original) ---
   const { run: queryAdminListRun } = useRequest(
     async () => {
-      const [, res] = await apiInterceptors(queryAdminList({ role: 'admin' }));
-      return res ?? [];
+      return queryAdminList({ role: 'admin' });
     },
     {
       onSuccess: data => {

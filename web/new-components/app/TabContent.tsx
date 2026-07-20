@@ -4,8 +4,8 @@ import BlurredCard from '@/new-components/common/blurredCard';
 import { IApp } from '@/types/app';
 import { StarFilled, StarOutlined } from '@ant-design/icons';
 import { Avatar, Empty, Spin } from 'antd';
-import Image from 'next/image';
-import { useRouter } from 'next/router';
+import Image from '@/app/image-compat';
+import { useRouter } from '@/app/router-compat';
 import React, { useContext } from 'react';
 import IconFont from '../common/Icon';
 

@@ -1,6 +1,6 @@
 import { apiInterceptors, postChatModeParamsFileLoad, postChatModeParamsList } from '@/client/api';
 import DBIcon from '@/components/common/db-icon';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { IDB } from '@/types/chat';
 import { dbMapper } from '@/utils';
 import { ExperimentOutlined, FolderAddOutlined } from '@ant-design/icons';
@@ -8,7 +8,7 @@ import { useAsyncEffect, useRequest } from 'ahooks';
 import type { UploadFile } from 'antd';
 import { Select, Tooltip, Upload } from 'antd';
 import classNames from 'classnames';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from '@/app/router-compat';
 import React, { memo, useCallback, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

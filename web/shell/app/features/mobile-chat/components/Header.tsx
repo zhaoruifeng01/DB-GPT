@@ -3,7 +3,7 @@ import { ExportOutlined } from '@ant-design/icons';
 import { App, Typography } from 'antd';
 import copy from 'copy-to-clipboard';
 import React, { memo, useContext, useState } from 'react';
-import { MobileChatContext } from '../';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 
 const Header: React.FC = () => {
   const { appInfo } = useContext(MobileChatContext);

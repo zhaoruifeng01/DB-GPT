@@ -1,6 +1,6 @@
 import { IDocument } from '@/types/knowledge';
 import { Button, Tooltip } from 'antd';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import FileStatusIcon from '../common/FileStatusIcon';
 
 interface IProps {

@@ -3,7 +3,7 @@ import { apiInterceptors, newDialogue } from '@/client/api';
 import { STORAGE_INIT_MESSAGE_KET } from '@/utils';
 import { Button, Input } from 'antd';
 import cls from 'classnames';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

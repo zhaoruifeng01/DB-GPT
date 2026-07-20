@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import React, { memo } from 'react';
 
 interface IProps {
@@ -9,7 +8,7 @@ interface IProps {
   className?: string;
 }
 const OptionIcon: React.FC<IProps> = ({ width, height, src, label }) => {
-  return <Image width={width || 14} height={height || 14} src={src} alt={label || 'db-icon'} priority />;
+  return <img width={width || 14} height={height || 14} src={src} alt={label || 'db-icon'} />;
 };
 
 export default memo(OptionIcon);

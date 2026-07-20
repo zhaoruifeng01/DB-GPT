@@ -4,7 +4,7 @@ import { SwapOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Dropdown, Popover } from 'antd';
 import React, { useContext, useMemo } from 'react';
-import { MobileChatContext } from '../';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 
 const ModelSelector: React.FC = () => {
   const { modelList } = useContext(ChatContext);

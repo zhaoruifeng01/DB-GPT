@@ -2,7 +2,7 @@
 import IconFont from '@/new-components/common/Icon';
 import { Dropdown, Slider } from 'antd';
 import React, { useContext } from 'react';
-import { MobileChatContext } from '../';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 
 const Thermometer: React.FC = () => {
   const { temperature, setTemperature } = useContext(MobileChatContext);

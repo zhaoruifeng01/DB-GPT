@@ -1,5 +1,5 @@
 import { apiInterceptors, getSpaceList } from '@/client/api';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { BookOutlined } from '@ant-design/icons';
 import { useRequest } from 'ahooks';
 import { Select, Tooltip } from 'antd';

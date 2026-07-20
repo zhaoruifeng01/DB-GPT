@@ -4,7 +4,7 @@ import { CheckOutlined, CopyOutlined, LoadingOutlined } from '@ant-design/icons'
 import { GPTVis } from '@antv/gpt-vis';
 import { Spin, Tooltip, message } from 'antd';
 import classNames from 'classnames';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ToolIcon, getStatusText, getToolIconName } from '../icons/ToolIcon';

@@ -28,8 +28,8 @@ def test_apimixin_initialization(apimixin):
     """Test APIMixin initialization with various parameters."""
     assert apimixin._remote_urls == ["http://example.com", "http://example2.com"]
     assert apimixin._health_check_path == "/health"
-    assert apimixin._health_check_interval_secs == 30
-    assert apimixin._health_check_timeout_secs == 60
+    assert apimixin._health_check_interval_secs == 180
+    assert apimixin._health_check_timeout_secs == 240
     assert apimixin._choice_type == "latest_first"
     assert isinstance(apimixin._heartbeat_executor, ThreadPoolExecutor)
 

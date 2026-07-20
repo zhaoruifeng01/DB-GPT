@@ -99,11 +99,12 @@ function ModelForm({ onCancel, onSuccess }: { onCancel: () => void; onSuccess: (
           const nestedValue = processed[param.param_name];
           // Make sure to keep all field values
           if (nestedValue.type) {
-            const typeFields = param.nested_fields[nestedValue.type] || [];
-            const fieldValues = {};
+            const typeFields =
+              (param.nested_fields as unknown as Record<string, ConfigurableParams[]>)[nestedValue.type] || [];
+            const fieldValues: Record<string, unknown> = {};
 
             // Collect values of all fields
-            typeFields.forEach(field => {
+            typeFields.forEach((field: ConfigurableParams) => {
               if (nestedValue[field.param_name] !== undefined) {
                 fieldValues[field.param_name] = nestedValue[field.param_name];
               }

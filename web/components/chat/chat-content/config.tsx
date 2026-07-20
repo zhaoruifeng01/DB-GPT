@@ -26,6 +26,7 @@ import VisPlugin from './vis-plugin';
 import { VisThinking } from './vis-thinking';
 
 type MarkdownComponent = Parameters<typeof GPTVis>['0']['components'];
+type GPTVisMarkdownPlugins = Pick<Parameters<typeof GPTVis>[0], 'remarkPlugins' | 'rehypePlugins'>;
 
 const customeTags: (keyof JSX.IntrinsicElements)[] = ['custom-view', 'chart-view', 'references', 'summary'];
 
@@ -233,11 +234,7 @@ const codeComponents = {
               {children}
             </code>
           )}
-          <GPTVis
-            components={markdownComponents}
-            rehypePlugins={[rehypeRaw, rehypeKatex]}
-            remarkPlugins={[remarkGfm, remarkMath]}
-          >
+          <GPTVis components={markdownComponents} {...markdownPlugins}>
             {matchValues.join('\n')}
           </GPTVis>
         </>
@@ -254,7 +251,7 @@ const basicComponents: MarkdownComponent = {
   ol({ children }) {
     return <ol className='py-1'>{children}</ol>;
   },
-  li({ children, ordered }) {
+  li({ children, ordered }: any) {
     return (
       <li
         className={`text-sm leading-7 ml-5 pl-2 text-gray-600 dark:text-gray-300 ${
@@ -368,8 +365,8 @@ const returnSqlVal = (val: string) => {
   return val.replace(regex, match => punctuationMap[match]);
 };
 
-const extraComponents: MarkdownComponent = {
-  'chart-view': function ({ content, children }) {
+const extraComponents = {
+  'chart-view': function ({ content, children }: any) {
     let data: {
       data: Datum[];
       type: BackEndChartType;
@@ -421,7 +418,7 @@ const extraComponents: MarkdownComponent = {
       </div>
     );
   },
-  references: function ({ children }) {
+  references: function ({ children }: any) {
     if (children) {
       try {
         const referenceData = JSON.parse(children as string);
@@ -432,7 +429,7 @@ const extraComponents: MarkdownComponent = {
       }
     }
   },
-  summary: function ({ children }) {
+  summary: function ({ children }: any) {
     return (
       <div>
         <p className='mb-2'>
@@ -443,7 +440,7 @@ const extraComponents: MarkdownComponent = {
       </div>
     );
   },
-};
+} as unknown as MarkdownComponent;
 
 const markdownComponents = {
   ...basicComponents,
@@ -453,5 +450,5 @@ const markdownComponents = {
 export const markdownPlugins = {
   remarkPlugins: [remarkGfm, [remarkMath, { singleDollarTextMath: true }]],
   rehypePlugins: [rehypeRaw, [rehypeKatex, { output: 'htmlAndMathml' }]],
-};
+} as unknown as GPTVisMarkdownPlugins;
 export default markdownComponents;

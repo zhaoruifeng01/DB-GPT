@@ -111,8 +111,8 @@ function ChatContent({ children, content, isChartChat, onLinkClick }: PropsWithC
 
   const extraMarkdownComponents = useMemo<MarkdownComponent>(
     () => ({
-      'custom-view'({ children }) {
-        const index = +children.toString();
+      'custom-view'({ children }: any) {
+        const index = +(children ?? '').toString();
         if (!cachePluginContext[index]) {
           return children;
         }

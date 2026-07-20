@@ -9,17 +9,22 @@ import { Button, Modal, Tabs } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CodePreview } from './code-preview';
+
+interface HtmlPreviewProps {
+  code: string;
+  language?: string;
+}
 /**
  * The HTML preview component is used to display HTML code and provide run, download, and full-screen functionality
  * @param {Object} props The component props
  * @param {string} props.code HTML code content
  * @param {string} props.language Code language, default is html
  */
-const HtmlPreview = ({ code, language = 'html' }) => {
+const HtmlPreview = ({ code, language = 'html' }: HtmlPreviewProps) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const iframeRef = useRef(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const { t } = useTranslation();
   const [parsedCode, setParsedCode] = useState({
     html: '',
@@ -30,7 +35,7 @@ const HtmlPreview = ({ code, language = 'html' }) => {
 
   // Parse the code and extract the HTML, CSS, and JS parts
   useEffect(() => {
-    const parseCode = sourceCode => {
+    const parseCode = (sourceCode: string) => {
       let html = sourceCode;
       let css = '';
       let js = '';
@@ -42,7 +47,7 @@ const HtmlPreview = ({ code, language = 'html' }) => {
       if (styleMatches.length > 0) {
         // Remove the style tags
         styleMatches.forEach(match => {
-          css += match[1] + '\n';
+          css += (match[1] ?? '') + '\n';
           html = html.replace(match[0], '');
         });
       }
@@ -54,7 +59,7 @@ const HtmlPreview = ({ code, language = 'html' }) => {
       if (scriptMatches.length > 0) {
         // Remove the script tags
         scriptMatches.forEach(match => {
-          js += match[1] + '\n';
+          js += (match[1] ?? '') + '\n';
           html = html.replace(match[0], '');
         });
       }
@@ -95,10 +100,12 @@ const HtmlPreview = ({ code, language = 'html' }) => {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(
+        Boolean(
         document.fullscreenElement ||
           document.webkitFullscreenElement ||
           document.mozFullScreenElement ||
           document.msFullscreenElement,
+        ),
       );
     };
 

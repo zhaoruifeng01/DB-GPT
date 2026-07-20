@@ -1,7 +1,7 @@
 import { EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Button, Spin, Tooltip, message } from 'antd';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

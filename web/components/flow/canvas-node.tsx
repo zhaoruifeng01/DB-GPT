@@ -5,7 +5,7 @@ import { CopyOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/ic
 import { Form, Popover, Tooltip } from 'antd';
 import classNames from 'classnames';
 import { cloneDeep } from 'lodash';
-import Image from 'next/image';
+import Image from '@/app/image-compat';
 import { useState } from 'react';
 import { useReactFlow } from 'reactflow';
 import IconWrapper from '../common/icon-wrapper';

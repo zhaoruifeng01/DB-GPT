@@ -1,8 +1,8 @@
 import ChatHeader from '@/new-components/chat/header/ChatHeader';
-import { ChatContentContext } from '@/pages/chat';
+import { ChatContentContext } from '@/app/chat-content-context';
 import { VerticalAlignBottomOutlined, VerticalAlignTopOutlined } from '@ant-design/icons';
-import dynamic from 'next/dynamic';
-import { useSearchParams } from 'next/navigation';
+import dynamic from '@/app/dynamic-compat';
+import { useSearchParams } from '@/app/router-compat';
 import React, {
   forwardRef,
   useCallback,

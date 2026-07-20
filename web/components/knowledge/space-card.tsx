@@ -3,7 +3,7 @@ import { ISpace } from '@/types/knowledge';
 import { dayjs } from '@/utils/date';
 import { ClockCircleOutlined, DeleteFilled, MessageFilled, UserOutlined, WarningOutlined } from '@ant-design/icons';
 import { Badge, ConfigProvider, Modal, Popover } from 'antd';
-import { useRouter } from 'next/router';
+import { useRouter } from '@/app/router-compat';
 import { useTranslation } from 'react-i18next';
 import GptCard from '../common/gpt-card';
 import DocPanel from './doc-panel';

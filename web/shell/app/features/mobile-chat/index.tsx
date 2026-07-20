@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChatContext } from '@/app/chat-context';
+import { MobileChatContext } from '@/app/mobile-chat-context';
 import { apiInterceptors, getAppInfo, getChatHistory, getDialogueList, postChatModeParamsList } from '@/client/api';
 import useUser from '@/hooks/use-user';
 import { IApp } from '@/types/app';
@@ -9,63 +10,11 @@ import { HEADER_USER_ID_KEY } from '@/utils/constants/index';
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { useRequest } from 'ahooks';
 import { Spin } from 'antd';
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import Content from './components/Content';
 import Header from './components/Header';
 import InputContainer from './components/InputContainer';
-
-interface MobileChatProps {
-  model: string;
-  temperature: number;
-  resource: any;
-  setResource: React.Dispatch<React.SetStateAction<any>>;
-  setTemperature: React.Dispatch<React.SetStateAction<number>>;
-  setModel: React.Dispatch<React.SetStateAction<string>>;
-  scene: string;
-  history: ChatHistoryResponse; // 会话内容
-  setHistory: React.Dispatch<React.SetStateAction<ChatHistoryResponse>>;
-  scrollViewRef: React.RefObject<HTMLDivElement>; // 会话可滚动区域
-  appInfo: IApp;
-  conv_uid: string;
-  resourceList?: Record<string, any>[];
-  order: React.MutableRefObject<number>;
-  handleChat: (_content?: string) => Promise<void>;
-  canAbort: boolean;
-  setCarAbort: React.Dispatch<React.SetStateAction<boolean>>;
-  canNewChat: boolean;
-  setCanNewChat: React.Dispatch<React.SetStateAction<boolean>>;
-  ctrl: React.MutableRefObject<AbortController | undefined>;
-  userInput: string;
-  setUserInput: React.Dispatch<React.SetStateAction<string>>;
-  getChatHistoryRun: () => void;
-}
-
-export const MobileChatContext = createContext<MobileChatProps>({
-  model: '',
-  temperature: 0.5,
-  resource: null,
-  setModel: () => {},
-  setTemperature: () => {},
-  setResource: () => {},
-  scene: '',
-  history: [],
-  setHistory: () => {},
-  scrollViewRef: { current: null },
-  appInfo: {} as IApp,
-  conv_uid: '',
-  resourceList: [],
-  order: { current: 1 },
-  handleChat: () => Promise.resolve(),
-  canAbort: false,
-  setCarAbort: () => {},
-  canNewChat: false,
-  setCanNewChat: () => {},
-  ctrl: { current: undefined },
-  userInput: '',
-  setUserInput: () => {},
-  getChatHistoryRun: () => {},
-});
 
 const MobileChat: React.FC = () => {
   // 从url上获取基本参数
