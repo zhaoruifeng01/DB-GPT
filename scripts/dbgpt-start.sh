@@ -109,7 +109,6 @@ if $need_build; then
       print "📦 npm install (yarn not found)..."
       npm install --no-package-lock 2>&1 | tail -3
     fi
-    echo "$dep_hash" > "../$DEP_MARKER"
   else
     print "✅ Dependencies unchanged, skipping install."
   fi
@@ -129,6 +128,7 @@ if $need_build; then
 
   # 记录本次构建捕获到的最新 mtime（避免 marker 时间戳漂移 bug）
   echo "$newest" > "$SRC_MARKER"
+  echo "$dep_hash" > "$DEP_MARKER"
   print "✓ Frontend rebuilt in $((SECONDS - t0))s."
 else
   print "✅ Frontend unchanged, skipping build ($((SECONDS - t0))s check)."

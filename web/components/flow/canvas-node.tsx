@@ -125,7 +125,9 @@ const CanvasNode: React.FC<CanvasNodeProps> = ({ data }) => {
   }
 
   function onParameterValuesChange(changedValues: any) {
-    const [changedKey, changedVal] = Object.entries(changedValues)[0];
+    const changedEntry = Object.entries(changedValues)[0];
+    if (!changedEntry) return;
+    const [changedKey, changedVal] = changedEntry;
 
     updateCurrentNodeValue(changedKey, changedVal);
     if (changedVal) {

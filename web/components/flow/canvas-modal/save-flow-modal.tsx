@@ -95,7 +95,7 @@ export const SaveFlowModal: React.FC<Props> = ({
 
       if (res?.uid) {
         messageApi.success(t('save_flow_success'));
-        router.push(`/construct/flow/canvas?id=${res.uid}`, undefined, { shallow: true });
+        router.push(`/construct/flow/canvas?id=${res.uid}`);
       }
     }
     setIsSaveFlowModalOpen(false);

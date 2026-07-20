@@ -59,7 +59,9 @@ function GraphVis() {
       const plugins: PluginOptions = [];
       Object.entries(groupedNodes).forEach(([key, nodes]) => {
         if (!key || nodes.length < 2) return;
-        const color = graphRef.current?.getElementRenderStyle(idOf(nodes[0])).fill;
+        const firstNode = nodes[0];
+        if (!firstNode) return;
+        const color = graphRef.current?.getElementRenderStyle(idOf(firstNode)).fill;
         plugins.push({
           key,
           type: 'bubble-sets',

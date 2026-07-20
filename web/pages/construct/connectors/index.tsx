@@ -1,5 +1,6 @@
 import {
   useConnectors,
+  useConnectorTools,
   useConnectorTypes,
   useCreateConnector,
   useDeleteConnector,
@@ -315,6 +316,7 @@ function Connectors() {
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       onTest={handleTest}
+                      toolsQuery={useConnectorTools}
                     />
                   ),
                 )}

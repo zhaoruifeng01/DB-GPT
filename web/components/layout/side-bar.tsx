@@ -5,6 +5,7 @@ import { DarkSvg, ModelSvg, SunnySvg } from '@/components/icons';
 import UserBar from '@/new-components/layout/UserBar';
 import type { IChatDialogueSchema } from '@/types/chat';
 import { STORAGE_LANG_KEY, STORAGE_THEME_KEY, STORAGE_USERINFO_KEY } from '@/utils/constants/index';
+import { dayjs } from '@/utils/date';
 import Icon, {
   ApartmentOutlined,
   ApiOutlined,
@@ -23,7 +24,6 @@ import Icon, {
 } from '@ant-design/icons';
 import { Popover, Skeleton, Tooltip, message } from 'antd';
 import cls from 'classnames';
-import { dayjs } from '@/utils/date';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';

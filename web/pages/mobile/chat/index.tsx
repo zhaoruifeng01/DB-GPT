@@ -106,7 +106,7 @@ const MobileChat: React.FC = () => {
         const [, res] = data;
         const viewList = res?.filter(item => item.role === 'view');
         if (viewList && viewList.length > 0) {
-          order.current = viewList[viewList.length - 1].order + 1;
+          order.current = (viewList[viewList.length - 1]?.order ?? 0) + 1;
         }
         setHistory(res || []);
       },
@@ -213,7 +213,7 @@ const MobileChat: React.FC = () => {
     };
     if (history && history.length > 0) {
       const viewList = history?.filter(item => item.role === 'view');
-      order.current = viewList[viewList.length - 1].order + 1;
+      order.current = (viewList[viewList.length - 1]?.order ?? 0) + 1;
     }
     const tempHistory: ChatHistoryResponse = [
       {
@@ -269,6 +269,7 @@ const MobileChat: React.FC = () => {
             setCanNewChat(true);
             setCarAbort(false);
           } else if (message?.startsWith('[ERROR]')) {
+            if (!tempHistory[index]) return;
             tempHistory[index].context = message?.replace('[ERROR]', '');
             tempHistory[index].thinking = false;
             setHistory([...history, ...tempHistory]);
@@ -276,6 +277,7 @@ const MobileChat: React.FC = () => {
             setCarAbort(false);
           } else {
             setCarAbort(true);
+            if (!tempHistory[index]) return;
             tempHistory[index].context = message;
             tempHistory[index].thinking = false;
             setHistory([...history, ...tempHistory]);
@@ -284,8 +286,10 @@ const MobileChat: React.FC = () => {
       });
     } catch {
       ctrl.current?.abort();
-      tempHistory[index].context = 'Sorry, we meet some error, please try again later.';
-      tempHistory[index].thinking = false;
+      if (tempHistory[index]) {
+        tempHistory[index].context = 'Sorry, we meet some error, please try again later.';
+        tempHistory[index].thinking = false;
+      }
       setHistory([...tempHistory]);
       setCanNewChat(true);
       setCarAbort(false);

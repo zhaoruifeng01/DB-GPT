@@ -352,12 +352,14 @@ function useReplayEngine(rounds: ReplayRound[], speed: number, autoPlay = false)
 
     for (let ri = startRound; ri < currentRounds.length; ri++) {
       const round = currentRounds[ri];
+      if (!round) continue;
       const siStart = ri === startRound ? startStep : 0;
 
       for (let si = siStart; si < round.steps.length; si++) {
         if (!playingRef.current) return;
 
         const step = round.steps[si];
+        if (!step) continue;
         await delay(BASE_DELAYS.beforeStep);
         if (!playingRef.current) return;
 
@@ -380,7 +382,7 @@ function useReplayEngine(rounds: ReplayRound[], speed: number, autoPlay = false)
         ...prev,
         roundIndex: ri,
         visibleStepCount: round.steps.length,
-        activeStepId: round.steps.length > 0 ? round.steps[round.steps.length - 1].id : null,
+        activeStepId: round.steps.length > 0 ? (round.steps[round.steps.length - 1]?.id ?? null) : null,
         showFinalForRound: true,
         completedRoundIndex: ri,
       }));

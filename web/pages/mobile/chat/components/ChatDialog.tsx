@@ -43,7 +43,7 @@ const ChatDialog: React.FC<{
     const cachePluginContext: DBGPTView[] = [];
 
     let cacheIndex = 0;
-    const result = value.replace(/<dbgpt-view[^>]*>[^<]*<\/dbgpt-view>/gi, matchVal => {
+    const result = (value ?? '').replace(/<dbgpt-view[^>]*>[^<]*<\/dbgpt-view>/gi, matchVal => {
       try {
         const pluginVal = matchVal.replaceAll('\n', '\\n').replace(/<[^>]*>|<\/[^>]*>/gm, '');
         const pluginContext = JSON.parse(pluginVal) as DBGPTView;

@@ -43,7 +43,7 @@ function parseCron(cron: string): {
     return { preset: 'custom', ...defaults };
   }
 
-  const [minute, hour, dayOfMonth, , dayOfWeek] = parts;
+  const [minute = '*', hour = '*', dayOfMonth = '*', , dayOfWeek = '*'] = parts;
   const min = Number(minute);
   const hr = Number(hour);
   const time = dayjs(`${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}`, 'HH:mm');
@@ -126,7 +126,7 @@ const CronInput: React.FC<CronInputProps> = ({ value, onChange }) => {
   }, [preset, custom, t]);
 
   // Locale-aware option lists (labels resolved via i18n; values are cron parts).
-  const weekdayOptions = useMemo(() => WEEKDAYS.map(w => ({ value: w.value, label: t(w.labelKey) })), [t]);
+  const weekdayOptions = useMemo(() => WEEKDAYS.map(w => ({ value: w.value, label: t(w.labelKey as any) })), [t]);
   const monthDayOptions = useMemo(
     () =>
       Array.from({ length: 31 }, (_, i) => ({

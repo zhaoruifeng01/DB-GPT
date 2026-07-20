@@ -1,5 +1,4 @@
 import { apiInterceptors, importFlow } from '@/client/api';
-import CanvasWrapper from '@/pages/construct/flow/canvas/index';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Form, GetProp, Modal, Radio, Upload, UploadFile, UploadProps, message } from 'antd';
 import { useEffect, useState } from 'react';
@@ -11,10 +10,15 @@ type Props = {
   setNodes: React.Dispatch<React.SetStateAction<Node<any, string | undefined>[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge<any>[]>>;
   setIsImportFlowModalOpen: (value: boolean) => void;
+  onFlowDataImported?: (data: unknown) => void;
 };
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
-export const ImportFlowModal: React.FC<Props> = ({ isImportModalOpen, setIsImportFlowModalOpen }) => {
+export const ImportFlowModal: React.FC<Props> = ({
+  isImportModalOpen,
+  setIsImportFlowModalOpen,
+  onFlowDataImported,
+}) => {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -39,8 +43,11 @@ export const ImportFlowModal: React.FC<Props> = ({ isImportModalOpen, setIsImpor
 
     if (res?.success) {
       messageApi.success(t('Import_Flow_Success'));
-      localStorage.setItem('importFlowData', JSON.stringify(res?.data));
-      CanvasWrapper();
+      if (onFlowDataImported) {
+        onFlowDataImported(res?.data);
+      } else {
+        localStorage.setItem('importFlowData', JSON.stringify(res?.data));
+      }
     } else if (res?.err_msg) {
       messageApi.error(res?.err_msg);
     }

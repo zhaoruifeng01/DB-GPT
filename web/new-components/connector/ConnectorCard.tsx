@@ -14,7 +14,7 @@ import {
 import { Button, Popconfirm, Tooltip } from 'antd';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ConnectorToolsModal from './ConnectorToolsModal';
+import ConnectorToolsModal, { type ConnectorToolsQueryFactory } from './ConnectorToolsModal';
 import { ConnectorCatalogEntry, ConnectorInstance, ConnectorStatus } from './types';
 
 interface InstanceCardProps {
@@ -24,6 +24,7 @@ interface InstanceCardProps {
   onDelete: (id: string) => void;
   onTest?: (id: string) => void;
   onSchedule?: (connector: ConnectorInstance) => void;
+  toolsQuery: ConnectorToolsQueryFactory;
   /** Optional matching catalog entry — used to render brand icon, category, description */
   catalogEntry?: ConnectorCatalogEntry;
 }
@@ -403,6 +404,7 @@ const ConnectorCard: React.FC<ConnectorCardProps> = props => {
           open={toolsModalOpen}
           instance={props.connector}
           onClose={() => setToolsModalOpen(false)}
+          toolsQuery={props.toolsQuery}
         />
       )}
     </>

@@ -1,4 +1,3 @@
-import { useConnectorTools } from '@/hooks/use-connector-api';
 import { CopyOutlined, SearchOutlined, ThunderboltFilled } from '@ant-design/icons';
 import { Alert, Modal, Tooltip, message } from 'antd';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -8,12 +7,23 @@ import type {
   ConnectorToolArgSummary,
   ConnectorToolArgTruncated,
   ConnectorToolSummary,
+  ConnectorToolsResponse,
 } from './types';
+
+export interface ConnectorToolsQueryResult {
+  data: ConnectorToolsResponse | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => void | Promise<unknown>;
+}
+
+export type ConnectorToolsQueryFactory = (connectorId?: string) => ConnectorToolsQueryResult;
 
 interface ConnectorToolsModalProps {
   open: boolean;
   instance: ConnectorInstance | null;
   onClose: () => void;
+  toolsQuery: ConnectorToolsQueryFactory;
 }
 
 const isTruncated = (v: ConnectorToolArgSummary | ConnectorToolArgTruncated): v is ConnectorToolArgTruncated =>
@@ -45,9 +55,9 @@ const StatusDot: React.FC<{ state?: 'active' | 'inactive' | 'not_mcp' }> = ({ st
   return <span className={`inline-block w-1.5 h-1.5 rounded-full ${cls}`} />;
 };
 
-const ConnectorToolsModal: React.FC<ConnectorToolsModalProps> = ({ open, instance, onClose }) => {
+const ConnectorToolsModal: React.FC<ConnectorToolsModalProps> = ({ open, instance, onClose, toolsQuery }) => {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useConnectorTools(instance?.id);
+  const { data, loading, error, refetch } = toolsQuery(instance?.id);
 
   const [query, setQuery] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(0);

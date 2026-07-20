@@ -1,11 +1,11 @@
-import { apiInterceptors, getUsableModels, queryAdminList } from '@/client/api';
 import { useAdminStore } from '@/app/stores/admin-store';
 import { useChatStore } from '@/app/stores/chat-store';
 import { useModelsStore } from '@/app/stores/models-store';
 import { usePreferencesStore } from '@/app/stores/preferences-store';
 import { useSceneStore } from '@/app/stores/scene-store';
-import { useUIStore } from '@/app/stores/ui-store';
 import type { ThemeMode } from '@/app/stores/types';
+import { useUIStore } from '@/app/stores/ui-store';
+import { apiInterceptors, getUsableModels, queryAdminList } from '@/client/api';
 import { ChatHistoryResponse, DialogueListResponse, IChatDialogueSchema } from '@/types/chat';
 import { UserInfoResponse } from '@/types/userinfo';
 import { getUserId } from '@/utils';
@@ -13,6 +13,8 @@ import { STORAGE_THEME_KEY } from '@/utils/constants/index';
 import { useRequest } from 'ahooks';
 import { useSearchParams } from 'next/navigation';
 import { createContext, useEffect } from 'react';
+
+const EMPTY_MODEL_LIST: string[] = [];
 
 interface IChatContext {
   mode: ThemeMode;
@@ -84,6 +86,9 @@ const ChatContextProvider = ({ children }: { children: React.ReactElement }) => 
   const chatId = searchParams?.get('id') ?? '';
   const scene = searchParams?.get('scene') ?? '';
   const db_param = searchParams?.get('db_param') ?? '';
+  const pathname = typeof window === 'undefined' ? '' : window.location.pathname;
+  const skipGlobalChatInit =
+    pathname.startsWith('/login') || pathname.startsWith('/share') || pathname.startsWith('/mobile');
 
   // --- Store hooks (subscribe to individual slices) ---
   const mode = usePreferencesStore(s => s.mode);
@@ -118,28 +123,45 @@ const ChatContextProvider = ({ children }: { children: React.ReactElement }) => 
 
   // --- Sync URL search params to scene store ---
   useEffect(() => {
+    if (skipGlobalChatInit) {
+      return;
+    }
     setScene(scene);
     setChatId(chatId);
     setDbParam(db_param || db_param);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, chatId, db_param]);
+  }, [scene, chatId, db_param, skipGlobalChatInit]);
 
   // --- Fetch model list (same useRequest as original) ---
-  const { data: fetchedModelList = [] } = useRequest(async () => {
-    const [, res] = await apiInterceptors(getUsableModels());
-    return res ?? [];
-  });
+  const { data: fetchedModelList = EMPTY_MODEL_LIST } = useRequest(
+    async () => {
+      const [, res] = await apiInterceptors(getUsableModels());
+      return res ?? [];
+    },
+    {
+      manual: skipGlobalChatInit,
+    },
+  );
 
   useEffect(() => {
+    if (skipGlobalChatInit) {
+      return;
+    }
     setModelList(fetchedModelList);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchedModelList]);
+  }, [fetchedModelList, skipGlobalChatInit]);
 
   // --- Auto-select first model when list loads (same as original) ---
   useEffect(() => {
+    if (skipGlobalChatInit) {
+      return;
+    }
+    if (!fetchedModelList.length) {
+      return;
+    }
     setModel(fetchedModelList[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchedModelList, fetchedModelList?.length]);
+  }, [fetchedModelList, fetchedModelList?.length, skipGlobalChatInit]);
 
   // --- Fetch admin list (same useRequest as original) ---
   const { run: queryAdminListRun } = useRequest(
@@ -156,11 +178,14 @@ const ChatContextProvider = ({ children }: { children: React.ReactElement }) => 
   );
 
   useEffect(() => {
+    if (skipGlobalChatInit) {
+      return;
+    }
     if (getUserId()) {
       queryAdminListRun();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryAdminListRun, getUserId()]);
+  }, [queryAdminListRun, getUserId(), skipGlobalChatInit]);
 
   // --- Initialize theme from localStorage (same as original) ---
   useEffect(() => {
@@ -170,6 +195,9 @@ const ChatContextProvider = ({ children }: { children: React.ReactElement }) => 
 
   // --- Initialize currentDialogInfo from localStorage (same as original) ---
   useEffect(() => {
+    if (skipGlobalChatInit) {
+      return;
+    }
     try {
       const dialogInfo = JSON.parse(localStorage.getItem('cur_dialog_info') || '');
       setCurrentDialogInfo(dialogInfo);
@@ -180,7 +208,7 @@ const ChatContextProvider = ({ children }: { children: React.ReactElement }) => 
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [skipGlobalChatInit]);
 
   // --- Build context value (same shape as original) ---
   // Note: dialogueList, currentDialogue, and refreshDialogList are intentionally

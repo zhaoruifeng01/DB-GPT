@@ -84,7 +84,7 @@ const Playground: NextPage = () => {
             ...{ app_name, page_no, page_size },
           });
         default:
-          return [];
+          return [null, [], { success: true, data: [], err_code: null, err_msg: null }, null] as any;
       }
     },
     {
@@ -104,20 +104,16 @@ const Playground: NextPage = () => {
             const index = code ? apps.app_list.findIndex((item: any) => item.app_code === code) : -1;
             if (index !== -1) {
               const finallyIndex = Math.floor(index / 12) * 12;
-              setApps(
-                {
-                  app_list: apps.app_list.toSpliced(finallyIndex, 12, ...data.app_list) || [],
-                  total_count: data?.total_count || 0,
-                } || {},
-              );
+              setApps({
+                app_list: apps.app_list.toSpliced(finallyIndex, 12, ...data.app_list) || [],
+                total_count: data?.total_count || 0,
+              });
             } else {
               console.log('concat');
-              setApps(
-                {
-                  app_list: apps.app_list.concat(data?.app_list) || [],
-                  total_count: data?.total_count || 0,
-                } || {},
-              );
+              setApps({
+                app_list: apps.app_list.concat(data?.app_list) || [],
+                total_count: data?.total_count || 0,
+              });
             }
           }
         }
@@ -161,7 +157,7 @@ const Playground: NextPage = () => {
     console.log(startIndex, stopIndex, currentPage);
     // 这里应该是一个从服务器获取更多数据的异步操作
     // 例如，你可能会调用 API 并返回一个 Promise
-    return getAppListFn('', currentPage.toString());
+    return Promise.resolve(getAppListFn('', currentPage.toString()));
   }
   const cellRenderer: GridCellRenderer = ({ columnIndex, key, rowIndex, style }) => {
     // 计算数组中的索引
@@ -239,10 +235,7 @@ const Playground: NextPage = () => {
             <div className='flex gap-8 items-center text-[#878c93] text-sm dark:text-stone-200'>
               {item.owner_name && (
                 <div className='flex gap-1 items-center'>
-                  <Avatar
-                    src={item?.owner_avatar_url}
-                    className='bg-icon-gradient cursor-pointer'
-                  >
+                  <Avatar src={item?.owner_avatar_url} className='bg-icon-gradient cursor-pointer'>
                     {item.owner_name}
                   </Avatar>
                   <span>{item.owner_name}</span>

@@ -30,6 +30,12 @@ pool_pre_ping = true
 type = "chroma"
 persist_path = "pilot/data"
 
+[[serves]]
+type = "governance"
+# Temporarily skip governance metadata schema checks for local frontend testing.
+# Re-enable this when the connected MySQL database has governance_metadata_* tables.
+enabled = false
+
 # Model Configurations
 [models]
 [[models.llms]]

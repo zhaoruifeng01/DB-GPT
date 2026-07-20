@@ -40,6 +40,8 @@ export interface AppRouter {
   pathname: string;
   /** Merged route params + search params. Mirrors Next.js `router.query`. */
   query: Record<string, string | string[] | undefined>;
+  /** Static-generation fallback flag from Next Pages Router; always false in the shell SPA. */
+  isFallback: boolean;
 }
 
 export function useRouter(): AppRouter {
@@ -69,6 +71,7 @@ export function useRouter(): AppRouter {
     replace: useCallback((to: string) => navigate(to, { replace: true }), [navigate]),
     pathname: location.pathname,
     query,
+    isFallback: false,
   };
 }
 

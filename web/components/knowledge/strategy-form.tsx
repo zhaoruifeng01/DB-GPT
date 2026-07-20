@@ -20,7 +20,7 @@ export default function StrategyForm({ strategies, docType, fileName, field }: I
   if (docType === 'DOCUMENT') {
     // filter strategy by file suffix
     const arr = fileName.split('.');
-    filleSuffix = arr[arr.length - 1];
+    filleSuffix = arr[arr.length - 1] ?? '';
   }
   const ableStrategies = filleSuffix ? strategies.filter(i => i.suffix.indexOf(filleSuffix) > -1) : strategies;
   const { t } = useTranslation();

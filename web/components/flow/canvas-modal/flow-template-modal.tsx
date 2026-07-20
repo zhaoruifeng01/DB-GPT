@@ -1,5 +1,4 @@
 import { getFlowTemplates } from '@/client/api';
-import CanvasWrapper from '@/pages/construct/flow/canvas/index';
 import type { TableProps } from 'antd';
 import { Button, Modal, Space, Table } from 'antd';
 import { useEffect, useState } from 'react';
@@ -8,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 type Props = {
   isFlowTemplateModalOpen: boolean;
   setIsFlowTemplateModalOpen: (value: boolean) => void;
+  onTemplateImported?: (data: unknown) => void;
 };
 
 interface DataType {
@@ -18,14 +18,21 @@ interface DataType {
   tags: string[];
 }
 
-export const FlowTemplateModal: React.FC<Props> = ({ isFlowTemplateModalOpen, setIsFlowTemplateModalOpen }) => {
+export const FlowTemplateModal: React.FC<Props> = ({
+  isFlowTemplateModalOpen,
+  setIsFlowTemplateModalOpen,
+  onTemplateImported,
+}) => {
   const { t } = useTranslation();
   const [dataSource, setDataSource] = useState([]);
 
   const onTemplateImport = (record: DataType) => {
     if (record?.name) {
-      localStorage.setItem('importFlowData', JSON.stringify(record));
-      CanvasWrapper();
+      if (onTemplateImported) {
+        onTemplateImported(record);
+      } else {
+        localStorage.setItem('importFlowData', JSON.stringify(record));
+      }
       setIsFlowTemplateModalOpen(false);
     }
   };

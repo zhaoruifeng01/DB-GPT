@@ -159,7 +159,7 @@ export default function Segmentation(props: IProps) {
                   key={field.key}
                   strategies={strategies}
                   docType={docType}
-                  fileName={files![field.name].name}
+                  fileName={files?.[field.name]?.name ?? ''}
                   field={field}
                 />
               ));
@@ -169,14 +169,14 @@ export default function Segmentation(props: IProps) {
                   {fields?.map(field => (
                     // field [{name: 0, key: 0, isListField: true, fieldKey: 0}, {name: 1, key: 1, isListField: true, fieldKey: 1}]
                     <Collapse.Panel
-                      header={`${field.name + 1}. ${files![field.name].name}`}
+                      header={`${field.name + 1}. ${files?.[field.name]?.name ?? ''}`}
                       key={field.key}
                       extra={renderSyncStatus(field.name)}
                     >
                       <StrategyForm
                         strategies={strategies}
                         docType={docType}
-                        fileName={files![field.name].name}
+                        fileName={files?.[field.name]?.name ?? ''}
                         field={field}
                       />
                     </Collapse.Panel>
@@ -190,7 +190,7 @@ export default function Segmentation(props: IProps) {
   }
 
   function renderSyncStatus(index: number) {
-    const status = files![index].status;
+    const status = files?.[index]?.status;
     switch (status) {
       case 'FINISHED':
         return <Icon component={DoneIcon} />;

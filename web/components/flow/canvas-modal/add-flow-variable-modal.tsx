@@ -73,6 +73,7 @@ export const AddFlowVariableModal: React.FC<Props> = ({ flowInfo, setFlowInfo })
 
   const loadData = (selectedOptions: DefaultOptionType[]) => {
     const targetOption = selectedOptions[selectedOptions.length - 1];
+    if (!targetOption) return;
     const { value, scope } = targetOption as DefaultOptionType & { scope: string };
 
     setTimeout(async () => {
@@ -257,7 +258,7 @@ export const AddFlowVariableModal: React.FC<Props> = ({ flowInfo, setFlowInfo })
                       style={{ width: 320 }}
                       rules={[{ required: true, message: 'Missing parameter value' }]}
                     >
-                      {renderVariableValue(controlTypes[index], index)}
+                      {renderVariableValue(controlTypes[index] ?? 'str', index)}
                     </Form.Item>
 
                     <Form.Item {...restField} name={[name, 'description']} label='描述' style={{ width: 170 }}>

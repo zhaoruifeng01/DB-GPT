@@ -8,6 +8,7 @@ import {
   syncDocument,
 } from '@/client/api';
 import { IDocument, ISpace } from '@/types/knowledge';
+import { dayjs } from '@/utils/date';
 import {
   DeleteOutlined,
   DeploymentUnitOutlined,
@@ -26,7 +27,6 @@ import {
 import { useRequest } from 'ahooks';
 import { Button, Card, Divider, Dropdown, Empty, Form, Input, Modal, Space, Spin, Tag, Tooltip, message } from 'antd';
 import cls from 'classnames';
-import { dayjs } from '@/utils/date';
 import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';

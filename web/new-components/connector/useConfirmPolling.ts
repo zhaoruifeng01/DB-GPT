@@ -27,6 +27,7 @@ export function useConfirmPolling({
       const data = (await axios.get('/api/v2/serve/connectors/pending-confirms')) as PendingConfirmation[] | undefined;
       if (data && data.length > 0) {
         const first = data[0];
+        if (!first) return;
         if (first.confirm_id !== currentConfirmIdRef.current) {
           currentConfirmIdRef.current = first.confirm_id;
           setPendingConfirmation(first);

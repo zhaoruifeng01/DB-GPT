@@ -155,24 +155,32 @@ const validateDynamicParameters = (node: IFlowDataNode): [boolean, string] => {
 
 export const checkFlowDataRequied = (flowData: IFlowData) => {
   const { nodes, edges } = flowData;
+  const firstNode = nodes[0];
+  if (!firstNode) {
+    return [true, {} as IFlowDataNode, ''] as [boolean, IFlowDataNode, string];
+  }
   // check the input, parameters that are required
-  let result: [boolean, IFlowDataNode, string] = [true, nodes[0], ''];
+  let result: [boolean, IFlowDataNode, string] = [true, firstNode, ''];
 
   outerLoop: for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i].data;
+    const flowNode = nodes[i];
+    if (!flowNode) continue;
+    const node = flowNode.data;
     const { inputs = [], parameters = [] } = node;
 
     // Check dynamic input groups first
     const dynamicInputGroups = getDynamicFieldGroups(inputs);
     for (const [baseName, fields] of Object.entries(dynamicInputGroups)) {
-      const minimumRequired = fields[0].dynamic_minimum || 0;
+      const firstField = fields[0];
+      if (!firstField) continue;
+      const minimumRequired = firstField.dynamic_minimum || 0;
       if (minimumRequired > 0) {
         // For dynamic fields, we check connections across all fields of this type
-        const hasEnoughConnections = checkDynamicConnections(nodes[i].id, 'inputs', 0, edges, minimumRequired);
+        const hasEnoughConnections = checkDynamicConnections(flowNode.id, 'inputs', 0, edges, minimumRequired);
         if (!hasEnoughConnections) {
           result = [
             false,
-            nodes[i],
+            flowNode,
             `The dynamic input ${baseName} of node ${node.label} requires at least ${minimumRequired} connections`,
           ];
           break outerLoop;
@@ -183,35 +191,38 @@ export const checkFlowDataRequied = (flowData: IFlowData) => {
     // Check individual inputs
     for (let j = 0; j < inputs.length; j++) {
       const input = inputs[j];
+      if (!input) continue;
 
       // Skip dynamic inputs that were checked above
       if (input.dynamic) continue;
 
       const isRequired = !input.optional;
-      if (isRequired && !edges.some(edge => edge.targetHandle === `${nodes[i].id}|inputs|${j}`)) {
-        result = [false, nodes[i], `The input ${inputs[j].type_name} of node ${node.label} is required`];
+      if (isRequired && !edges.some(edge => edge.targetHandle === `${flowNode.id}|inputs|${j}`)) {
+        result = [false, flowNode, `The input ${input.type_name} of node ${node.label} is required`];
         break outerLoop;
       }
     }
 
     // Validate dynamic parameters
-    const [paramsValid, errorMessage] = validateDynamicParameters(nodes[i]);
+    const [paramsValid, errorMessage] = validateDynamicParameters(flowNode);
     if (!paramsValid) {
-      result = [false, nodes[i], errorMessage];
+      result = [false, flowNode, errorMessage];
       break outerLoop;
     }
 
     // Check dynamic parameter groups
     const dynamicParamGroups = getDynamicFieldGroups(parameters);
     for (const [baseName, fields] of Object.entries(dynamicParamGroups)) {
-      const minimumRequired = fields[0].dynamic_minimum || 0;
-      if (minimumRequired > 0 && fields[0].category === 'resource') {
+      const firstField = fields[0];
+      if (!firstField) continue;
+      const minimumRequired = firstField.dynamic_minimum || 0;
+      if (minimumRequired > 0 && firstField.category === 'resource') {
         // For dynamic params, check connections across all params of this type
-        const hasEnoughConnections = checkDynamicConnections(nodes[i].id, 'parameters', 0, edges, minimumRequired);
+        const hasEnoughConnections = checkDynamicConnections(flowNode.id, 'parameters', 0, edges, minimumRequired);
         if (!hasEnoughConnections) {
           result = [
             false,
-            nodes[i],
+            flowNode,
             `The dynamic parameter ${baseName} of node ${node.label} requires at least ${minimumRequired} connections`,
           ];
           break outerLoop;
@@ -222,6 +233,7 @@ export const checkFlowDataRequied = (flowData: IFlowData) => {
     // check parameters
     for (let k = 0; k < parameters.length; k++) {
       const parameter = parameters[k];
+      if (!parameter) continue;
 
       // Skip dynamic parameters that were checked above
       if (parameter.dynamic) continue;
@@ -229,16 +241,16 @@ export const checkFlowDataRequied = (flowData: IFlowData) => {
       if (
         !parameter.optional &&
         parameter.category === 'resource' &&
-        !edges.some(edge => edge.targetHandle === `${nodes[i].id}|parameters|${k}`)
+        !edges.some(edge => edge.targetHandle === `${flowNode.id}|parameters|${k}`)
       ) {
-        result = [false, nodes[i], `The parameter ${parameter.type_name} of node ${node.label} is required`];
+        result = [false, flowNode, `The parameter ${parameter.type_name} of node ${node.label} is required`];
         break outerLoop;
       } else if (
         !parameter.optional &&
         parameter.category === 'common' &&
         (parameter.value === undefined || parameter.value === null)
       ) {
-        result = [false, nodes[i], `The parameter ${parameter.type_name} of node ${node.label} is required`];
+        result = [false, flowNode, `The parameter ${parameter.type_name} of node ${node.label} is required`];
         break outerLoop;
       }
     }
@@ -246,14 +258,16 @@ export const checkFlowDataRequied = (flowData: IFlowData) => {
     // Check dynamic output groups
     const dynamicOutputGroups = getDynamicFieldGroups(node.outputs || []);
     for (const [baseName, fields] of Object.entries(dynamicOutputGroups)) {
-      const minimumRequired = fields[0].dynamic_minimum || 0;
+      const firstField = fields[0];
+      if (!firstField) continue;
+      const minimumRequired = firstField.dynamic_minimum || 0;
       if (minimumRequired > 0) {
         // For dynamic outputs, check connections across all outputs of this type
-        const hasEnoughConnections = checkDynamicConnections(nodes[i].id, 'outputs', 0, edges, minimumRequired);
+        const hasEnoughConnections = checkDynamicConnections(flowNode.id, 'outputs', 0, edges, minimumRequired);
         if (!hasEnoughConnections) {
           result = [
             false,
-            nodes[i],
+            flowNode,
             `The dynamic output ${baseName} of node ${node.label} requires at least ${minimumRequired} connections`,
           ];
           break outerLoop;

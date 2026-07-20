@@ -33,7 +33,12 @@ const Resource: React.FC = () => {
                 setResource(item.space_id || item.param);
               }}
             >
-              <OptionIcon width={14} height={14} src={dbMapper[item.type].icon} label={dbMapper[item.type].label} />
+              <OptionIcon
+                width={14}
+                height={14}
+                src={dbMapper[item.type]?.icon ?? ''}
+                label={dbMapper[item.type]?.label ?? ''}
+              />
               <span className='text-xs'>{item.param}</span>
             </div>
           ),
@@ -143,8 +148,8 @@ const Resource: React.FC = () => {
               <OptionIcon
                 width={14}
                 height={14}
-                src={dbMapper[selectedVal?.type || resourceList?.[0]?.type]?.icon}
-                label={dbMapper[selectedVal?.type || resourceList?.[0]?.type]?.label}
+                src={dbMapper[selectedVal?.type || resourceList?.[0]?.type || '']?.icon ?? ''}
+                label={dbMapper[selectedVal?.type || resourceList?.[0]?.type || '']?.label ?? ''}
               />
               <span className='text-xs font-medium'>{selectedVal?.param || resourceList?.[0]?.param}</span>
               <SwapOutlined rotate={90} />

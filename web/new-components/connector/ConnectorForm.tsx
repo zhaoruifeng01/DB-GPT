@@ -302,7 +302,7 @@ const ConnectorForm: React.FC<ConnectorFormProps> = ({
           </Radio.Group>
         </Form.Item>
 
-        {selectedType && (
+        {selectedType && transportMeta && (
           <Form.Item
             name='server_uri'
             label={transportMeta.label}
@@ -313,7 +313,7 @@ const ConnectorForm: React.FC<ConnectorFormProps> = ({
                 message: t('connector.form.uriPattern'),
               },
             ]}
-            extra={t(transportMeta.hintKey)}
+            extra={t(transportMeta.hintKey as any)}
           >
             <Input placeholder={transportMeta.placeholder} />
           </Form.Item>
@@ -336,7 +336,7 @@ const ConnectorForm: React.FC<ConnectorFormProps> = ({
               // (none / token) resolve via i18n; bearer stays a literal brand term.
               let optLabel = opt;
               if (field.name === 'auth_type') {
-                if (AUTH_TYPE_LABEL_KEYS[opt]) optLabel = t(AUTH_TYPE_LABEL_KEYS[opt]);
+                if (AUTH_TYPE_LABEL_KEYS[opt]) optLabel = t(AUTH_TYPE_LABEL_KEYS[opt] as any);
                 else optLabel = AUTH_TYPE_LITERAL[opt] ?? opt;
               }
               return { label: optLabel, value: opt };

@@ -1,8 +1,8 @@
 import { apiInterceptors, delSpace, newDialogue } from '@/client/api';
 import { ISpace } from '@/types/knowledge';
+import { dayjs } from '@/utils/date';
 import { ClockCircleOutlined, DeleteFilled, MessageFilled, UserOutlined, WarningOutlined } from '@ant-design/icons';
 import { Badge, ConfigProvider, Modal, Popover } from 'antd';
-import { dayjs } from '@/utils/date';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'react-i18next';
 import GptCard from '../common/gpt-card';

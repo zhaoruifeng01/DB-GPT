@@ -79,7 +79,12 @@ function DatabaseForm({
 
       const { description, type, ...values } = formValues;
 
-      const data = {
+      const data: {
+        type: typeof selectedType;
+        params: typeof values;
+        description: string;
+        id?: string;
+      } = {
         type: selectedType,
         params: values,
         description: description || '',

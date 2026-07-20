@@ -1,9 +1,9 @@
 import { apiInterceptors, stopModel } from '@/client/api';
 import { IModelData } from '@/types/model';
 import { MODEL_ICON_MAP } from '@/utils';
+import { dayjs } from '@/utils/date';
 import { PauseCircleOutlined } from '@ant-design/icons';
 import { message } from 'antd';
-import { dayjs } from '@/utils/date';
 import { useTranslation } from 'react-i18next';
 import GptCard from '../common/gpt-card';
 

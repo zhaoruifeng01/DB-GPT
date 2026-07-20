@@ -32,6 +32,7 @@ export const renderUpload = (params: Props) => {
           const urlList: UploadFile[] = [];
           for (let index = 0; index < res.data.data.length; index++) {
             const element = res.data.data[index];
+            if (!element) continue;
             urlList.push({
               uid: element.file_id,
               name: element.file_name,

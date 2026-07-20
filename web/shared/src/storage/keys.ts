@@ -19,6 +19,12 @@ export const STORAGE_KEYS = {
   lang: '__db_gpt_lng_key',
   /** Init message payload for first-load chat bootstrap. */
   initMessage: '__db_gpt_im_key',
+  /** Legacy handoff payload for construct/app -> construct/app/extra. */
+  appDraft: 'new_app_info',
+  /** Legacy chat bootstrap payload shared with the not-yet-native chat route. */
+  currentDialogInfo: 'cur_dialog_info',
+  /** Legacy knowledge-space handoff used by existing knowledge child forms. */
+  currentSpaceId: 'cur_space_id',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

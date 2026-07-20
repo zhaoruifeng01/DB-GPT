@@ -36,7 +36,7 @@ const PlaygroundPage: React.FC = () => {
       `I've analyzed your request and here's what I found:\n\n| Metric | Value | Status |\n|--------|-------|--------|\n| Performance | 95% | ✅ Good |\n| Reliability | 99.9% | ✅ Excellent |\n| Cost | $0.05 | ✅ Low |\n\nOverall, the results look promising!`,
     ];
 
-    return responses[Math.floor(Math.random() * responses.length)];
+    return responses[Math.floor(Math.random() * responses.length)] ?? '';
   }, []);
 
   const handleSendMessage = useCallback(

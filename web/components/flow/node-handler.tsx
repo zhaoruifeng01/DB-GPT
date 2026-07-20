@@ -211,10 +211,12 @@ const NodeHandler: React.FC<NodeHandlerProps> = ({ node, data, type, label, inde
   const isLastDynamicField = () => {
     if (!dynamic) return false;
 
-    const ioArray = node[label];
+    const ioArray = node[label] as Array<IFlowNodeInput | IFlowNodeOutput | IFlowNodeParameter>;
     const dynamicFields = ioArray.filter(item => item.type_cls === data.type_cls && item.name.startsWith(data.name));
+    const lastDynamicField = dynamicFields[dynamicFields.length - 1];
+    if (!lastDynamicField) return false;
 
-    return index === ioArray.indexOf(dynamicFields[dynamicFields.length - 1]);
+    return index === ioArray.indexOf(lastDynamicField);
   };
 
   return (

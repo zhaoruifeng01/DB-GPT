@@ -26,9 +26,9 @@ export default function SpaceForm(props: IProps) {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    form.setFieldValue('storage', spaceConfig?.[0].name);
-    setStorage(spaceConfig?.[0].name);
-  }, [spaceConfig]);
+    form.setFieldValue('storage', spaceConfig?.[0]?.name);
+    setStorage(spaceConfig?.[0]?.name);
+  }, [form, spaceConfig]);
 
   const handleStorageChange = (data: string) => {
     setStorage(data);

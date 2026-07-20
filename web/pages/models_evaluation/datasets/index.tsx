@@ -71,7 +71,7 @@ const DatasetsForEvaluation = () => {
 
       setSelectedDataset(prevState => {
         if (prevState && result.map(item => item.dataset_id).includes(prevState)) return prevState;
-        return result[0]?.dataset_id;
+        return result[0]?.dataset_id ?? null;
       });
     }
     init();
@@ -159,7 +159,7 @@ const DatasetsForEvaluation = () => {
   };
 
   const onTableSelected = async (selectedKeys: Key[], { selectedNodes }: { selectedNodes: CustomTreeDataNode[] }) => {
-    setSelectedDataset(selectedNodes[0].parent as string);
+    setSelectedDataset((selectedNodes[0]?.parent as string | undefined) ?? null);
     setSelectedTable(selectedKeys[0] as string);
   };
 
@@ -195,7 +195,7 @@ const DatasetsForEvaluation = () => {
   const generateColumns = () => {
     if (!tableData || tableData.rows.length === 0) return [];
 
-    const firstRow = tableData.rows[0];
+    const firstRow = tableData.rows[0] ?? {};
     return Object.keys(firstRow).map((key, index) => ({
       title: key,
       dataIndex: key,
